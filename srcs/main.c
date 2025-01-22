@@ -11,5 +11,4 @@ int main()
     if (getegid())
         ft_error(SUDO);
     printf("%s", LOGINS);
-
 }
