@@ -17,9 +17,9 @@ bool	is_bin(void)
 	path[len] = 0;
 	if (!realpath(path, rpath))
 		ft_error("realpath");
-	if (strcmp("/bin", dirname(rpath)))
-		return true;
-	return false;
+	if (strcmp("/usr/bin", dirname(rpath)))
+		return false;
+	return true;
 }
 
 int	main()
@@ -29,10 +29,10 @@ int	main()
 	printf("%s", LOGINS);
 	if (is_bin())
 	{
-		write(1, "I'm in /bin", 11);
+		write(1, "I'm in /bin\n", 12);
 	}
 	else
 	{
-		write(1, "I'm not in /bin", 15);
+		write(1, "I'm not in /bin\n", 16);
 	}
 }

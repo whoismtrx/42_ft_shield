@@ -32,7 +32,7 @@ fclean: clean
 re: fclean all
 
 up:
-	./setup.sh
+	@./setup.sh
 
 stop:
 	vagrant halt
