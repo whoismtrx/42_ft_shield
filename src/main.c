@@ -1,4 +1,4 @@
-#include "../inc/ft_shield.h"
+#include "../include/ft_shield.h"
 
 void	ft_error(char *str)
 {
