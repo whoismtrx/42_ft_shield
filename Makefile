@@ -30,3 +30,18 @@ fclean: clean
 	rm -rf $(NAME)
 	
 re: fclean all
+
+up:
+	./setup.sh
+
+stop:
+	vagrant halt
+
+destroy:
+	vagrant destroy -f
+
+status:
+	vagrant status
+
+reload:
+	vagrant reload --provision
