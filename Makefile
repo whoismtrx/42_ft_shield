@@ -34,6 +34,9 @@ re: fclean all
 up:
 	@./setup.sh
 
+ssh:
+	vagrant ssh
+
 stop:
 	vagrant halt
 
