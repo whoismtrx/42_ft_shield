@@ -1,6 +1,7 @@
 #ifndef FT_SHIELD_H
 #define FT_SHIELD_H
 
+#include <poll.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -11,6 +12,8 @@
 #include <libgen.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #define LOGINS  "orekabe & aabdou\n"
 #define SUDO    "You should run 'ft_shield' with sudo privilege\n"
