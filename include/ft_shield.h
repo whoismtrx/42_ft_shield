@@ -6,9 +6,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <limits.h>
 #include <libgen.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 
 #define LOGINS  "orekabe & aabdou\n"
 #define SUDO    "You should run 'ft_shield' with sudo privilege\n"
