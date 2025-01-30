@@ -316,6 +316,11 @@ void	create_remote_shell_session(int fd)
 
 }
 
+void	create_reverse_shell_connection(fd, user_input)
+{
+
+}
+
 void	handle_client_commands(int fd, char *cmd)
 {
 	char	*user_input = trim_whitespaces(cmd);
