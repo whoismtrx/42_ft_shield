@@ -36,9 +36,10 @@ void	RC4_PRGA(unsigned char *S, unsigned char *K, size_t len)
 	}
 }
 
-void	RC4(const char *salt, const char *msg, char *cypher)
+unsigned char	*RC4(const char *salt, const char *msg)
 {
 	size_t			len = strlen(msg);
+	unsigned char	*cypher = (unsigned char *)malloc(len * sizeof(unsigned char *));
 	unsigned char	S[256];
 	unsigned char	K[len];
 
@@ -46,17 +47,16 @@ void	RC4(const char *salt, const char *msg, char *cypher)
 	RC4_PRGA(S, K, len);
 	for (size_t i = 0; i < len; i++)
 		cypher[i] = msg[i] ^ K[i];
-	return;
+	return cypher;
 }
 
 int main()
 {
 	char	salt[] = "orekabe & aabdou\n";
 	char	msg[] = "Please enter your password: ";
-	char	cypher[strlen(msg)];
 
 	printf("%s\n", msg);
-	RC4(salt, msg, cypher);
+	unsigned char *cypher = RC4(salt, msg);
 	
 	printf("Salt: ");
     for (size_t i = 0; i < strlen(salt); i++) 
@@ -71,4 +71,5 @@ int main()
         printf("0x%02X", (unsigned char)cypher[i]);
 	}
     printf("};\n");
+	free(cypher);
 }
