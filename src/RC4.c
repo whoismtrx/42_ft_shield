@@ -51,17 +51,24 @@ void	RC4(const char *salt, const char *msg, char *cypher)
 
 int main()
 {
-	char	salt[] = "#include <libc.h>";
-	char	msg[] = "WHOISMTRX";
+	char	salt[] = "orekabe & aabdou\n";
+	char	msg[] = "Please enter your password: ";
 	char	cypher[strlen(msg)];
 
+	printf("%s\n", msg);
 	RC4(salt, msg, cypher);
 	
 	printf("Salt: ");
     for (size_t i = 0; i < strlen(salt); i++) 
-        printf("%02X ", (unsigned char)salt[i]);
-    printf("\nCypher: ");
+        printf("0x%02X ", (unsigned char)salt[i]);
+    printf("\nCypher: {");
     for (size_t i = 0; i < strlen(msg); i++)
-        printf("%02X ", (unsigned char)cypher[i]);
-    printf("\n");
+	{
+		if (i && i % 19 == 0)
+			printf(",\n");
+		else if (i)
+			printf(", ");
+        printf("0x%02X", (unsigned char)cypher[i]);
+	}
+    printf("};\n");
 }
