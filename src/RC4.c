@@ -53,7 +53,7 @@ unsigned char	*RC4(const char *salt, const char *msg)
 int main()
 {
 	char	salt[] = "orekabe & aabdou\n";
-	char	msg[] = "Please enter your password: ";
+	char	msg[] = "0x%02X";
 
 	printf("%s\n", msg);
 	unsigned char *cypher = RC4(salt, msg);

