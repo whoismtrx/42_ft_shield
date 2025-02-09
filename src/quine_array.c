@@ -1,5 +1,39 @@
 #include <libc.h>
 
+unsigned char	*get_file_data(void)
+{
+	FILE			*file;
+	long			size, rsize;
+	unsigned char	*buff;
+
+	file = fopen("/Users/orekabe/Desktop/42_ft_shield/src/main.c", "rb");
+	if (!file)
+		exit(1);
+	puts("here");
+	fseek(file, 0, SEEK_END);
+	size = ftell(file);
+	rewind(file);
+	buff = (unsigned char *)calloc(size + 1, sizeof(unsigned char));
+	if (!buff)
+	{
+		fclose(file);
+		exit(1);
+	}
+	rsize = fread(buff, 1, size, file);
+	if (rsize != size)
+	{
+		free(buff);
+		fclose(file);
+		exit(1);
+	}
+	if (fclose(file) < 0)
+	{
+		free(buff);
+		exit(1);
+	}
+	return buff;
+}
+
 void	RC4_swap(unsigned char *S, int i, int j)
 {
 	unsigned char	temp;
@@ -36,7 +70,7 @@ void	RC4_PRGA(unsigned char *S, unsigned char *K, size_t len)
 	}
 }
 
-unsigned char	*RC4(const char *salt, const char *msg, size_t len)
+unsigned char	*RC4(const char *salt, const unsigned char *msg, size_t len)
 {
 	unsigned char	*cypher = (unsigned char *)calloc(len+1, sizeof(unsigned char));
 	unsigned char	S[256];
@@ -52,10 +86,8 @@ unsigned char	*RC4(const char *salt, const char *msg, size_t len)
 int main()
 {
 	char	salt[] = "orekabe & aabdou\n";
-	char	msg[] = {0x60, 0x19, 0x64, 0x63, 0xCB, 0xBB, 0xCC, 0x89, 0xEB, 0x1E, 0x0C, 0x0F, 0xCF, 0xD5, 0x38, 0xF5, 0x72, 0xE6, 0x51,
-0x79, 0x31, 0x20, 0x4F, 0xC4, 0x4B, 0xB8, 0x75, 0x65, 0x1F, 0xDE, 0x76, 0x0A, 0x52, 0x82, 0x52, 0x3C, 0x33, 0xAC,
-0x8F, 0x5E, 0x50, 0xC7, 0xE2, 0x1E, 0xBB, 0x1D, 0x9F, 0xCD, 0x14, 0x2F, 0xDA, 0x63, 0x3A, 0x86, 0x90};
-	// printf("%s\n", msg);
+	unsigned char	*msg = get_file_data();
+	printf("%s\n", msg);
 	unsigned char *cypher = RC4(salt, msg, sizeof(msg));
 	
 	printf("Salt: ");
