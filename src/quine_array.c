@@ -9,7 +9,6 @@ unsigned char	*get_file_data(void)
 	file = fopen("/Users/orekabe/Desktop/42_ft_shield/src/main.c", "rb");
 	if (!file)
 		exit(1);
-	puts("here");
 	fseek(file, 0, SEEK_END);
 	size = ftell(file);
 	rewind(file);
@@ -88,13 +87,13 @@ int main()
 	char	salt[] = "orekabe & aabdou\n";
 	unsigned char	*msg = get_file_data();
 	printf("%s\n", msg);
-	unsigned char *cypher = RC4(salt, msg, sizeof(msg));
+	unsigned char *cypher = RC4(salt, msg, strlen((const char *)msg));
 	
 	printf("Salt: ");
     for (size_t i = 0; i < sizeof(salt); i++) 
         printf("0x%02X ", (unsigned char)salt[i]);
     printf("\nCypher: {");
-    for (size_t i = 0; i < sizeof(msg); i++)
+    for (size_t i = 0; i < strlen((const char *)msg); i++)
 	{
 		if (i && i % 19 == 0)
 			printf(",\n");
@@ -103,7 +102,7 @@ int main()
         printf("0x%02X", (unsigned char)cypher[i]);
 	}
     printf("};\n");
-	for (int i = 0; i < sizeof(msg); i++)
+	for (int i = 0; i < strlen((const char *)msg); i++)
 		printf("%c", cypher[i]);
 	printf("\n%s", cypher);
 	free(cypher);
