@@ -86,7 +86,7 @@ int main()
 {
 	char	salt[] = "orekabe & aabdou\n";
 	unsigned char	*msg = get_file_data();
-	printf("%s\n", msg);
+	// printf("%s\n", msg);
 	unsigned char *cypher = RC4(salt, msg, strlen((const char *)msg));
 	
 	printf("Salt: ");
@@ -95,15 +95,15 @@ int main()
     printf("\nCypher: {");
     for (size_t i = 0; i < strlen((const char *)msg); i++)
 	{
-		if (i && i % 19 == 0)
+		if (i && i % 25 == 0)
 			printf(",\n");
 		else if (i)
 			printf(", ");
         printf("0x%02X", (unsigned char)cypher[i]);
 	}
     printf("};\n");
-	for (int i = 0; i < strlen((const char *)msg); i++)
-		printf("%c", cypher[i]);
-	printf("\n%s", cypher);
+	// for (int i = 0; i < strlen((const char *)msg); i++)
+	// 	printf("%c", cypher[i]);
+	// printf("\n%s", cypher);
 	free(cypher);
 }

@@ -1,6 +1,6 @@
 CC = cc
 
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -fsanitize=address,undefined -Wall -Wextra -Werror
 
 NAME = ft_shield
 
@@ -18,6 +18,7 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $@
+	strip $(NAME)
 
 $(OBJD)/%.o: $(SRCD)/%.c
 	mkdir -p $(OBJD)
