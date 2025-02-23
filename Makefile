@@ -4,13 +4,9 @@ CFLAGS = -fsanitize=address,undefined -Wall -Wextra -Werror
 
 NAME = ft_shield
 
-HEADER = -I./include
-
-SRCD = ./src
-
 OBJD = ./objs
 
-SRC = $(SRCD)/main.c
+SRC = main.c
 
 OBJ = $(addprefix $(OBJD)/, $(notdir $(SRC:.c=.o)))
 
@@ -18,9 +14,9 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $@
-	strip $(NAME)
+	strip -s $(NAME)
 
-$(OBJD)/%.o: $(SRCD)/%.c
+$(OBJD)/%.o: %.c
 	mkdir -p $(OBJD)
 	$(CC) -c $(CFLAGS) $(HEADER) $< -o $@
 

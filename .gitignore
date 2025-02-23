@@ -1,0 +1,8 @@
+.vscode
+.vagrant
+.DS_Store
+a.out
+ft_shield
+*.o
+*.a
+objs

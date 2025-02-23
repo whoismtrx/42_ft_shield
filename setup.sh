@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECT_DIR="/Users/orekabe/Desktop/42_ft_shield"
+PROJECT_DIR=$PWD
 GOINFRE_DIR="/Users/orekabe/goinfre"
 VM_NAME="ft_shield_vm"
 BOX_NAME="debian/bullseye64"
