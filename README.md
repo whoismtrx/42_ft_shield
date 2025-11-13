@@ -1,6 +1,6 @@
 # Ft_shield
 
-![](https://github.com/whoismtrx/42_ft_shield/blob/main/gifs/ft_shield.gif)
+![](https://github.com/whoismtrx/42_ft_shield/blob/main/ft_shield.gif)
 
 ## Overview
 
