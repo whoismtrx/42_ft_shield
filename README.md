@@ -1,7 +1,5 @@
 # Ft_shield
 
-![](https://github.com/whoismtrx/42_ft_shield/blob/main/ft_shield.gif)
-
 ## Overview
 
 This project is about creating a simple `trojan horse`, a type of malware that appears legitimate but contains a malicious payload. The program is divided into two parts: a "dropper" and a "payload" `the daemon`.
@@ -125,3 +123,19 @@ The `/bin/ft_shield` binary is the payload.
   * [Reverse Shell Generator](https://www.revshells.com/)
   * [RC4 Stream Cipher](https://www.youtube.com/watch?v=wW3WOLX4itc)
   * [DJB2 Hash Function](https://theartincode.stanis.me/008-djb2/)
+
+## Project Structure
+
+```
+ft_shield/
+├── main.c                  # Dropper/payload source (318KB with embedded code)
+├── Makefile                # Build automation with VM management
+├── Vagrantfile             # Debian Bullseye VM configuration
+├── setup.sh                # VM initialization script
+├── ft_shield.gif           # Demo animation
+└── README.md               # Documentation
+```
+
+## Disclaimer
+
+This repository is for educational purposes only, documenting my work on the 42 curriculum. These solutions are intended as a reference for students who have already completed or are actively working on the project.
